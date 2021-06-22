@@ -15,31 +15,24 @@
 M = 0
 
 @i
-M = 0 // M[i] = 0
+M = 0
 
 @0
 D = M
 
 @sum
-M = 0  // M[sum] = R0
+M = 0 
 
 (LOOP)
-
-	// Conditional
-	// i++
-	// 0
 	@i
 	D = M
 
-	// 
 	@1
 	D = M - D
 
-	// end the loop
 	@ENDLOOP
 	D;JLE
 
-	// Body 
 	@0
 	D = M
 
