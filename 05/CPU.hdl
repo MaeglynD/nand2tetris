@@ -39,33 +39,44 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-		// Choose between instruction and the alu output
-		Mux16(a=outalu, b=instruction, sel=instruction[0], out=outmux);
+		Mux16(a=instruction, b=outALU, sel=instruction[15], out=outmux);
 
-		// A register
-		Register(in=outmux, load=instruction[10], out=outrega out[0..14]=addressM);
+		Not(in=instruction[15], out=isAInstruction);
+		Or(a=isAInstruction, b=instruction[5], out=loadA);
+
+		ARegister(in=outmux, load=loadA, out=regA, out[0..14]=addressM);
+
+		And(a=instruction[15], b=instruction[12], out=selAM);
+		Mux16(a=regA, b=inM, sel=selAM, out=AM);
+
+		And(a=instruction[15], b=instruction[4], out=loadDReg);
+		DRegister(in=outALU, load=loadDReg, out=regD);
+
+		ALU(x=regD, y=AM, zr=zr, ng=ng, out=outALU, out=outM,
+			zx=instruction[11],
+			nx=instruction[10],
+			zy=instruction[9],
+			ny=instruction[8],
+			f=instruction[7],
+			no=instruction[6]
+		);
+
+		And(a=instruction[3], b=instruction[15], out=writeM);
+
+		And(a=instruction[15], b=instruction[0], out=jgt);
+		And(a=instruction[15], b=instruction[1], out=jeq);
+		And(a=instruction[15], b=instruction[2], out=jlt);
+
+		Not(in=ng, out=zeroOrGreater);
+		Not(in=zr, out=notZero);
+		And(a=zeroOrGreater, b=notZero, out=greaterThanZero);
 		
-		//
-		Mux16(a=outrega, b=inM, sel=instruction[3], out=outmuxb)
+		And(a=jeq, b=zr, out=pos1);
+		And(a=jlt, b=ng, out=pos2);
+		And(a=jgt, b=greaterThanZero, out=pos3);
 
-		//
-		DMux8Way(in=true, sel=instruction[12..15], a=a, b=b, c=c, d=d, e=e, f=f, g=g, h=h);
+		Or(a=pos1, b=pos2, out=posInterim);
+		Or(a=pos3, b=posInterim, out=pcLoad);
 
-		// Not equal 0
-		Not(in=zr, out=notzr);
-		// Not greater than 0
-		Not(in=ng, out=notng);
-		// Greater than or equal to 0
-		Or(a=zr, b=ng, out=orzrng);
-
-		//
-		PC(in=outrega, load=, reset=reset, out[0..14]=pc)
-
-		// D register
-		Register(in=outalu, load=instruction[11], out=outregd);
-
-		// ALU
-		ALU(x=outregd, y=outmuxb, zx=instruction[4], nx=instruction[5], zy=instruction[6], ny=instruction[7], f=instruction[8], no=instruction[9], zr=zr, ng=ng, out=outalu, out=outM);
-	
-		
+		PC(in=regA, load=pcLoad, reset=reset, out[0..14]=pc, inc=true);
 }
