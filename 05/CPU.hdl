@@ -39,17 +39,33 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-		//
+		// Choose between instruction and the alu output
 		Mux16(a=outalu, b=instruction, sel=instruction[0], out=outmux);
+
 		// A register
-		Register(in=outmux, load=instruction[10], out=outrega);
+		Register(in=outmux, load=instruction[10], out=outrega out[0..14]=addressM);
+		
+		//
+		Mux16(a=outrega, b=inM, sel=instruction[3], out=outmuxb)
+
+		//
+		DMux8Way(in=true, sel=instruction[12..15], a=a, b=b, c=c, d=d, e=e, f=f, g=g, h=h);
+
+		// Not equal 0
+		Not(in=zr, out=notzr);
+		// Not greater than 0
+		Not(in=ng, out=notng);
+		// Greater than or equal to 0
+		Or(a=zr, b=ng, out=orzrng);
+
+		//
+		PC(in=outrega, load=, reset=reset, out[0..14]=pc)
+
 		// D register
-		Register(in=, load=, out=);
+		Register(in=outalu, load=instruction[11], out=outregd);
+
 		// ALU
-		ALU(x=, y=, zx=instruction[4], nx=instruction[5], zy=instruction[6], ny=instruction[7], f=instruction[8], no=instruction[9], out=outalu, zr=, ng=);
+		ALU(x=outregd, y=outmuxb, zx=instruction[4], nx=instruction[5], zy=instruction[6], ny=instruction[7], f=instruction[8], no=instruction[9], zr=zr, ng=ng, out=outalu, out=outM);
+	
 		
-
-		
-
-
 }
