@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 using namespace std;
 
 class Parser {
@@ -26,7 +27,7 @@ class Parser {
 		}
 
 		bool hasMoreCommands() {
-			return currentCommandIndex < commands.size();
+			return currentCommandIndex < (int)commands.size();
 		}
 
 		void advance() {
@@ -75,11 +76,64 @@ class Parser {
 		}
 };
 
+class Code{
+	public:
+		string dest(string mnemonic) {
+			unordered_map<string, string> comparisons({
+				{ "null", "000" },
+				{ "M", "001" },
+				{ "D", "010" },
+				{ "MD", "011" },
+				{ "A", "100" },
+				{ "AM", "101" },
+				{ "AD", "110" },
+				{ "AMD", "111" },
+			});
+
+			return comparisons[mnemonic];
+		}
+
+		string comp(string mnemonic) {
+			unordered_map<string, string> comparisons({
+				{ "0", "0101010" },
+				{ "1", "0111111" },
+				{ "-1", "0111010" },
+				{ "D", "0001100" },
+				{ "A", "0110000" },
+				{ "!D", "0001101" },
+				{ "!A", "0110001" },
+				{ "-D", "0001111" },
+				{ "-A", "0110011" },
+				{ "D+1", "0111111" },
+				{ "A+1", "0110111" },
+				{ "D-1", "0001110" },
+				{ "A-1", "0110010" },
+				{ "D+A", "0000010" },
+				{ "D-A", "0010011" },
+				{ "A-D", "0000111" },
+				{ "D&A", "0000000" },
+				{ "D|A", "0010101" },
+				{ "M", "1100000" },
+				{ "!M", "1110001" },
+				{ "-M", "1110011" },
+				{ "M+1", "1110111" },
+				{ "M-1", "1110010" },
+				{ "D+M", "1000010" },
+				{ "D-M", "1010011" },
+				{ "M-D", "1000111" },
+				{ "D&M", "1000000" },
+				{ "D|M", "1010101" },
+			});
+
+			return comparisons[mnemonic];
+		}
+};
+
 int main(){
 	string fileName;
 	cin >> fileName; 
 	
-	Parser parsedFile(fileName);
+	// Parser parsedFile(fileName);
 
 	return 0;
 }
