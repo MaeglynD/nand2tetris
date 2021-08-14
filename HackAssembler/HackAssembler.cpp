@@ -127,6 +127,21 @@ class Code{
 
 			return comparisons[mnemonic];
 		}
+
+		string jump(string mnemonic) {
+			unordered_map<string, string> comparisons({
+				{ "null", "000" },
+				{ "JGT", "001" },
+				{ "JEQ", "010" },
+				{ "JGE", "011" },
+				{ "JLT", "100" },
+				{ "JNE", "101" },
+				{ "JLE", "110" },
+				{ "JMP", "111" },
+			});
+
+			return comparisons[mnemonic];
+		}
 };
 
 int main(){
