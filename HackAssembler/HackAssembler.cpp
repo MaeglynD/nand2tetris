@@ -150,17 +150,17 @@ class Code{
 		string intToBinary(int num) {
 			string binaryString = "0000000000000000";
 
-			while(num > 1) {
-				if (num < 2) {
+			while(num > 0) {
+				if (num == 1) {
 					binaryString[15] = '1';
-					num = 0;
-				} else {
-					int i = 1;
+					break;
+				} 
 
-					while ((1 << i) <= num) i++;
-					num -= (1 << (i - 1));
-					binaryString[16 - i] = '1';
-				}
+				int i = 1;
+
+				while ((1 << i) <= num) i++;
+				num -= (1 << (i - 1));
+				binaryString[16 - i] = '1';
 			}
 
 			return binaryString;
@@ -174,7 +174,7 @@ int main(){
 	// Parser parsedFile(fileName);
 
 	Code testing;
-	cout << testing.intToBinary(552);
+	cout << testing.intToBinary(553) << endl << testing.intToBinary(552);
 
 	return 0;
 }
