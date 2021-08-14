@@ -5,81 +5,6 @@
 #include <unordered_map>
 using namespace std;
 
-// class Parser {
-// 	public:
-// 		vector<string> commands;
-// 		int currentCommandIndex = -1;
-
-// 		Parser(string fileName) {
-// 			string line;
-// 			ifstream fileContents;
-			
-// 			fileContents.open(fileName);
-			
-// 			while(getline(fileContents, line)) {
-// 				line.erase(remove(line.begin(), line.end(), ' '), line.end());
-
-// 				// If theres anything in the line, and its not a comment
-// 				if (line != "" && line.substr(0, 2) != "//") {
-// 					commands.push_back(line);
-// 				}
-// 			}
-
-// 			// for (string command : commands) {
-				
-// 			// }
-// 		}
-
-// 		bool hasMoreCommands() {
-// 			return currentCommandIndex < (int)commands.size();
-// 		}
-
-// 		void advance() {
-// 			currentCommandIndex++;
-// 		}
-
-// 		string commandType() {
-// 			char firstLetter = commands[currentCommandIndex][0];
-
-// 			if (firstLetter == '@') {
-// 				return "A_COMMAND";
-// 			}
-
-// 			if (firstLetter == '(') {
-// 				return "L_COMMAND";
-// 			}
-
-// 			return "C_COMMAND";
-// 		}
-
-// 		string symbol() {
-// 			string currentCommand = commands[currentCommandIndex];
-// 			bool isLCommand = currentCommand[currentCommand.size() - 1] == ')';
-
-// 			return currentCommand.substr(1, - (isLCommand ? 2 : 1));
-// 		}
-
-// 		string destCompJump(string type) {
-// 			string currentCommand = commands[currentCommandIndex];
-// 			int equalsDelimiter = currentCommand.find("=");
-// 			int semicolonDelimiter;
-
-// 			if (type == "dest") {
-// 				return equalsDelimiter ? currentCommand.substr(0, equalsDelimiter) : "null";
-// 			}
-
-// 			semicolonDelimiter = currentCommand.find(";");
-
-// 			if (type == "comp") {
-// 				return currentCommand.substr(equalsDelimiter ? equalsDelimiter : (0, semicolonDelimiter));
-// 			}
-
-// 			if (type == "jump") {
-// 				return semicolonDelimiter ? currentCommand.substr(semicolonDelimiter) : "null";
-// 			}
-// 		}
-// };
-
 class Code{
 	public:
 		string dest(string mnemonic) {
@@ -166,15 +91,100 @@ class Code{
 			return binaryString;
 		}
 };
+class Parser {
+	public:
+		vector<string> commands;
+
+		Parser(string fileName) {
+			string line;
+			Code translator;
+			ifstream assemblyFile(fileName + ".asm");
+
+			while(getline(assemblyFile, line)) {
+				line.erase(remove(line.begin(), line.end(), ' '), line.end());
+
+				if (line != "" && line.substr(0, 2) != "//") {
+					commands.push_back(line);
+				}
+			}
+
+			ofstream translatedFile(fileName + ".hack");
+
+			for (string command : commands) {
+				string binary;
+				string currentType = commandType(command);
+
+				if (currentType == "A_COMMAND") {
+					binary = translator.intToBinary(stoi(symbol(command)));
+				} 
+				
+				if (currentType == "C_COMMAND") {
+					binary = "111" 
+					 + translator.dest(DCJ(command, "dest"))
+					 + translator.comp(DCJ(command, "comp")) 
+					 + translator.jump(DCJ(command, "jump"));
+				}
+				
+				if (currentType == "L_COMMAND") {
+					// To be done in next section
+				}
+
+				translatedFile << binary << endl;
+			}
+
+			assemblyFile.close();
+			translatedFile.close();
+		}
+
+		string commandType(string command) {
+			char firstLetter = command[0];
+
+			if (firstLetter == '@') {
+				return "A_COMMAND";
+			}
+
+			if (firstLetter == '(') {
+				return "L_COMMAND";
+			}
+
+			return "C_COMMAND";
+		}
+
+		string symbol(string command) {
+			return command.substr(1, -(command[command.size() - 1] == ')' ? 2 : 1));
+		}
+
+		string DCJ(string command, string type) {
+			int equalsDelimiter = command.find("=");
+			int semicolonDelimiter = command.find(";");
+
+			bool isSemiDelim = semicolonDelimiter != -1;
+			bool isEqualDelim = equalsDelimiter != -1;
+
+			if (type == "dest" && isEqualDelim) {
+				return command.substr(0, equalsDelimiter);
+			}
+
+			if (type == "comp") {
+				return isEqualDelim 
+					? command.substr(equalsDelimiter + 1) 
+					: command.substr(0, semicolonDelimiter);
+			}
+
+			if (type == "jump" && isSemiDelim) {
+				return command.substr(semicolonDelimiter + 1);
+			}
+
+			return "null";
+		}
+};
 
 int main(){
-	// string fileName;
-	// cin >> fileName; 
+	string fileName;
+	cin >> fileName; 
 	
-	// Parser parsedFile(fileName);
-
-	Code testing;
-	cout << testing.intToBinary(553) << endl << testing.intToBinary(552);
+	Parser parser(fileName);
+	cout << "Your .hack file is now ready. Enjoy.";
 
 	return 0;
 }
