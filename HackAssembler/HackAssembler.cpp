@@ -5,76 +5,80 @@
 #include <unordered_map>
 using namespace std;
 
-class Parser {
-	public:
-		vector<string> commands;
-		int currentCommandIndex = -1;
+// class Parser {
+// 	public:
+// 		vector<string> commands;
+// 		int currentCommandIndex = -1;
 
-		Parser(string fileName) {
-			string line;
-			ifstream fileContents;
+// 		Parser(string fileName) {
+// 			string line;
+// 			ifstream fileContents;
 			
-			fileContents.open(fileName);
+// 			fileContents.open(fileName);
 			
-			while(getline(fileContents, line)) {
-				line.erase(remove(line.begin(), line.end(), ' '), line.end());
+// 			while(getline(fileContents, line)) {
+// 				line.erase(remove(line.begin(), line.end(), ' '), line.end());
 
-				// If theres anything in the line, and its not a comment
-				if (line != "" && line.substr(0, 2) != "//") {
-					commands.push_back(line);
-				}
-			}
-		}
+// 				// If theres anything in the line, and its not a comment
+// 				if (line != "" && line.substr(0, 2) != "//") {
+// 					commands.push_back(line);
+// 				}
+// 			}
 
-		bool hasMoreCommands() {
-			return currentCommandIndex < (int)commands.size();
-		}
+// 			// for (string command : commands) {
+				
+// 			// }
+// 		}
 
-		void advance() {
-			currentCommandIndex++;
-		}
+// 		bool hasMoreCommands() {
+// 			return currentCommandIndex < (int)commands.size();
+// 		}
 
-		string commandType() {
-			char firstLetter = commands[currentCommandIndex][0];
+// 		void advance() {
+// 			currentCommandIndex++;
+// 		}
 
-			if (firstLetter == '@') {
-				return "A_COMMAND";
-			}
+// 		string commandType() {
+// 			char firstLetter = commands[currentCommandIndex][0];
 
-			if (firstLetter == '(') {
-				return "L_COMMAND";
-			}
+// 			if (firstLetter == '@') {
+// 				return "A_COMMAND";
+// 			}
 
-			return "C_COMMAND";
-		}
+// 			if (firstLetter == '(') {
+// 				return "L_COMMAND";
+// 			}
 
-		string symbol() {
-			string currentCommand = commands[currentCommandIndex];
-			bool isLCommand = currentCommand[currentCommand.size() - 1] == ')';
+// 			return "C_COMMAND";
+// 		}
 
-			return currentCommand.substr(1, - (isLCommand ? 2 : 1));
-		}
+// 		string symbol() {
+// 			string currentCommand = commands[currentCommandIndex];
+// 			bool isLCommand = currentCommand[currentCommand.size() - 1] == ')';
 
-		string mnemonic(string type) {
-			string currentCommand = commands[currentCommandIndex];
-			int equalsDelimiter = currentCommand.find("=");
-			int semicolonDelimiter;
+// 			return currentCommand.substr(1, - (isLCommand ? 2 : 1));
+// 		}
 
-			if (type == "dest") {
-				return equalsDelimiter ? currentCommand.substr(0, equalsDelimiter) : "null";
-			}
+// 		string destCompJump(string type) {
+// 			string currentCommand = commands[currentCommandIndex];
+// 			int equalsDelimiter = currentCommand.find("=");
+// 			int semicolonDelimiter;
 
-			semicolonDelimiter = currentCommand.find(";");
+// 			if (type == "dest") {
+// 				return equalsDelimiter ? currentCommand.substr(0, equalsDelimiter) : "null";
+// 			}
 
-			if (type == "comp") {
-				return currentCommand.substr(equalsDelimiter ? equalsDelimiter : (0, semicolonDelimiter));
-			}
+// 			semicolonDelimiter = currentCommand.find(";");
 
-			if (type == "jump") {
-				return semicolonDelimiter ? currentCommand.substr(semicolonDelimiter) : "null";
-			}
-		}
-};
+// 			if (type == "comp") {
+// 				return currentCommand.substr(equalsDelimiter ? equalsDelimiter : (0, semicolonDelimiter));
+// 			}
+
+// 			if (type == "jump") {
+// 				return semicolonDelimiter ? currentCommand.substr(semicolonDelimiter) : "null";
+// 			}
+// 		}
+// };
 
 class Code{
 	public:
@@ -142,13 +146,35 @@ class Code{
 
 			return comparisons[mnemonic];
 		}
+
+		string intToBinary(int num) {
+			string binaryString = "0000000000000000";
+
+			while(num > 1) {
+				if (num < 2) {
+					binaryString[15] = '1';
+					num = 0;
+				} else {
+					int i = 1;
+
+					while ((1 << i) <= num) i++;
+					num -= (1 << (i - 1));
+					binaryString[16 - i] = '1';
+				}
+			}
+
+			return binaryString;
+		}
 };
 
 int main(){
-	string fileName;
-	cin >> fileName; 
+	// string fileName;
+	// cin >> fileName; 
 	
 	// Parser parsedFile(fileName);
+
+	Code testing;
+	cout << testing.intToBinary(552);
 
 	return 0;
 }
