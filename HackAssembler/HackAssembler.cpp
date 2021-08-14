@@ -42,7 +42,7 @@ class Code{
 				{ "A-D", "0000111" },
 				{ "D&A", "0000000" },
 				{ "D|A", "0010101" },
-				{ "M", "1100000" },
+				{ "M", "1110000" },
 				{ "!M", "1110001" },
 				{ "-M", "1110011" },
 				{ "M+1", "1110111" },
@@ -99,6 +99,7 @@ class Parser {
 			string line;
 			Code translator;
 			ifstream assemblyFile(fileName + ".asm");
+			ofstream translatedFile(fileName + ".hack");
 
 			while(getline(assemblyFile, line)) {
 				line.erase(remove(line.begin(), line.end(), ' '), line.end());
@@ -107,8 +108,6 @@ class Parser {
 					commands.push_back(line);
 				}
 			}
-
-			ofstream translatedFile(fileName + ".hack");
 
 			for (string command : commands) {
 				string binary;
@@ -120,13 +119,13 @@ class Parser {
 				
 				if (currentType == "C_COMMAND") {
 					binary = "111" 
-					 + translator.dest(DCJ(command, "dest"))
-					 + translator.comp(DCJ(command, "comp")) 
-					 + translator.jump(DCJ(command, "jump"));
+						+ translator.comp(DCJ(command, "comp")) 
+						+ translator.dest(DCJ(command, "dest"))
+						+ translator.jump(DCJ(command, "jump"));
 				}
 				
 				if (currentType == "L_COMMAND") {
-					// To be done in next section
+					//
 				}
 
 				translatedFile << binary << endl;
