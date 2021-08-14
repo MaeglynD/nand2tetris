@@ -34,7 +34,7 @@ class Parser {
 		}
 
 		string commandType() {
-			char firstLetter = commands.at(currentCommandIndex)[0];
+			char firstLetter = commands[currentCommandIndex][0];
 
 			if (firstLetter == '@') {
 				return "A_COMMAND";
@@ -48,10 +48,30 @@ class Parser {
 		}
 
 		string symbol() {
-			string currentCommand = commands.at(currentCommandIndex);
+			string currentCommand = commands[currentCommandIndex];
 			bool isLCommand = currentCommand[currentCommand.size() - 1] == ')';
 
 			return currentCommand.substr(1, - (isLCommand ? 2 : 1));
+		}
+
+		string mnemonic(string type) {
+			string currentCommand = commands[currentCommandIndex];
+			int equalsDelimiter = currentCommand.find("=");
+			int semicolonDelimiter;
+
+			if (type == "dest") {
+				return equalsDelimiter ? currentCommand.substr(0, equalsDelimiter) : "null";
+			}
+
+			semicolonDelimiter = currentCommand.find(";");
+
+			if (type == "comp") {
+				return currentCommand.substr(equalsDelimiter ? equalsDelimiter : (0, semicolonDelimiter));
+			}
+
+			if (type == "jump") {
+				return semicolonDelimiter ? currentCommand.substr(semicolonDelimiter) : "null";
+			}
 		}
 };
 
