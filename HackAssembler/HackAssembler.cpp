@@ -7,7 +7,21 @@ using namespace std;
 
 class SymbolTable{
 	public: 
-		unordered_map<string, int> table;
+		SymbolTable() {
+			for (int i = 0; i <= 15; i++){
+				table["R" + i] = i;
+			}
+		}
+
+		unordered_map<string, int> table{
+			{ "SP", 0 },
+			{ "LCL", 1 },
+			{ "ARG", 2 },
+			{ "THIS", 3 },
+			{ "THAT", 4 },
+			{ "SCREEN", 16384 },
+			{ "KBD", 24576 },
+		};
 
 		void addEntry(string symbol, int address) {
 			table[symbol] = address;
@@ -111,8 +125,10 @@ class Code{
 class Parser {
 	public:
 		vector<string> commands;
+		SymbolTable symbolTable;
 
 		Parser(string fileName) {
+			int commandIndex = 0;
 			string line;
 			Code translator;
 			ifstream assemblyFile(fileName + ".asm");
@@ -123,6 +139,12 @@ class Parser {
 
 				if (line != "" && line.substr(0, 2) != "//") {
 					commands.push_back(line);
+					
+					if (commandType(line) == "L_COMMAND") {
+						symbolTable.addEntry(symbol(line), commandIndex);
+					} else {
+						commandIndex++;
+					}
 				}
 			}
 
