@@ -5,6 +5,23 @@
 #include <unordered_map>
 using namespace std;
 
+class SymbolTable{
+	public: 
+		unordered_map<string, int> table;
+
+		void addEntry(string symbol, int address) {
+			table[symbol] = address;
+		}
+
+		bool contains(string symbol) {
+			return table.find(symbol) != table.end();
+		}
+
+		int getAddress(string symbol) {
+			return table[symbol];
+		}
+};
+
 class Code{
 	public:
 		string dest(string mnemonic) {
