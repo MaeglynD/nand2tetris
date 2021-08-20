@@ -11,10 +11,6 @@ class SymbolTable{
 			for (int i = 0; i <= 15; i++){
 				table["R" + to_string(i)] = i;
 			}
-
-			for (auto &x : table) {
-				cout << x.first << endl;
-			}
 		}
 
 		unordered_map<string, int> table{
