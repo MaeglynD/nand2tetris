@@ -9,7 +9,11 @@ class SymbolTable{
 	public: 
 		SymbolTable() {
 			for (int i = 0; i <= 15; i++){
-				table["R" + i] = i;
+				table["R" + to_string(i)] = i;
+			}
+
+			for (auto &x : table) {
+				cout << x.first << endl;
 			}
 		}
 
@@ -135,9 +139,10 @@ class Parser {
 			ofstream translatedFile(fileName + ".hack");
 
 			while(getline(assemblyFile, line)) {
+				line = line.substr(0, line.find("//"));
 				line.erase(remove(line.begin(), line.end(), ' '), line.end());
 
-				if (line != "" && line.substr(0, 2) != "//") {
+				if (line != "") {
 					commands.push_back(line);
 					
 					if (commandType(line) == "L_COMMAND") {
@@ -148,12 +153,26 @@ class Parser {
 				}
 			}
 
-			for (string command : commands) {
-				string binary;
-				string currentType = commandType(command);
 
+			for (unsigned int i = 0; i < commands.size(); i++) {
+				string binary;
+				string command = commands[i];
+				string currentType = commandType(command);
+		
 				if (currentType == "A_COMMAND") {
-					binary = translator.intToBinary(stoi(symbol(command)));
+					string currentSymbol = symbol(command);
+
+					// If the first character is a digit, we simply translate it into binary
+					if (isdigit(currentSymbol[0])) {
+						binary = translator.intToBinary(stoi(currentSymbol));
+					} else {
+						// If its not, then it must be a symbol.
+						if (!symbolTable.contains(currentSymbol)) {
+							symbolTable.addEntry(currentSymbol, 0);
+						}
+
+						binary = translator.intToBinary(symbolTable.getAddress(currentSymbol));
+					}
 				} 
 				
 				if (currentType == "C_COMMAND") {
@@ -162,12 +181,10 @@ class Parser {
 						+ translator.dest(DCJ(command, "dest"))
 						+ translator.jump(DCJ(command, "jump"));
 				}
-				
-				if (currentType == "L_COMMAND") {
-					//
-				}
 
-				translatedFile << binary << endl;
+				if (binary != "") {
+					translatedFile << binary << endl;
+				}
 			}
 
 			assemblyFile.close();
@@ -189,7 +206,8 @@ class Parser {
 		}
 
 		string symbol(string command) {
-			return command.substr(1, -(command[command.size() - 1] == ')' ? 2 : 1));
+			int size = command.size();
+			return command.substr(1, size - (command[size - 1] == ')' ? 2 : 1));
 		}
 
 		string DCJ(string command, string type) {
