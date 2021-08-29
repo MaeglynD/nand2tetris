@@ -49,7 +49,8 @@ unordered_map<string, string> arithmeticTable {
 			M=-1
 			(EQ_END_{id}))" 
 	},
-	{ "gt", R"(@SP
+	{ 
+		"gt", R"(@SP
 			M=M-1
 			A=M
 			D=M
@@ -68,7 +69,26 @@ unordered_map<string, string> arithmeticTable {
 			M=-1
 			(GT_END_{id}))" 
 	},
-	{ "lt", "" },
+	{ 
+		"lt", R"(@SP
+			M=M-1
+			A=M
+			D=M
+			A=A-1
+			D=M-D
+			@LT_TRUE_{id}
+			D;JLT
+			@SP
+			A=M-1
+			M=0
+			@LT_END_{id}
+			0;JMP
+			(LT_TRUE_{id})
+			@SP
+			A=M-1
+			M=-1
+			(LT_END_{id}))" 
+	},
 	{ "and", "" },
 	{ "or", "" },
 	{ "not", "" },
