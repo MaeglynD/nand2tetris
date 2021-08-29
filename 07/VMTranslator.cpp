@@ -40,16 +40,34 @@ unordered_map<string, string> arithmeticTable {
 			D;JEQ
 			@SP
 			A=M-1
-			M=1
+			M=0
 			@EQ_END_{id}
 			0;JMP
 			(EQ_TRUE_{id})
 			@SP
-			A=A-1
-			M=1
+			A=M-1
+			M=-1
 			(EQ_END_{id}))" 
 	},
-	{ "gt", "" },
+	{ "gt", R"(@SP
+			M=M-1
+			A=M
+			D=M
+			A=A-1
+			D=M-D
+			@GT_TRUE_{id}
+			D;JGT
+			@SP
+			A=M-1
+			M=0
+			@GT_END_{id}
+			0;JMP
+			(GT_TRUE_{id})
+			@SP
+			A=M-1
+			M=-1
+			(GT_END_{id}))" 
+	},
 	{ "lt", "" },
 	{ "and", "" },
 	{ "or", "" },
