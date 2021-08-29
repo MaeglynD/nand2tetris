@@ -12,6 +12,7 @@ unordered_map<string, string> arithmeticTable {
 	{ 
 		"add", R"(@SP
 			M=M-1
+			A=M
 			D=M
 			A=A-1
 			M=D+M)" 
@@ -89,9 +90,27 @@ unordered_map<string, string> arithmeticTable {
 			M=-1
 			(LT_END_{id}))" 
 	},
-	{ "and", "" },
-	{ "or", "" },
-	{ "not", "" },
+	{ 
+		"and", R"(@SP
+			M=M-1
+			A=M
+			D=M
+			A=A-1
+			M=D&M)" 
+	},
+	{ 
+		"or", R"(@SP
+			M=M-1
+			A=M
+			D=M
+			A=A-1
+			M=D|M)"
+	},
+	{ 
+		"not", R"(@SP
+			A=M-1
+			M=!M)" 
+	},
 };
 
 class Parser {
