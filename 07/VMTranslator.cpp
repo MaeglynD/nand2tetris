@@ -8,6 +8,54 @@
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
+unordered_map<string, string> arithmeticTable {
+	{ 
+		"add", R"(@SP
+			M=M-1
+			D=M
+			A=A-1
+			M=D+M)" 
+	},
+	{ 
+		"sub", R"(@SP
+			M=M-1
+			A=M
+			D=M
+			A=A-1
+			M=M-D)"
+	},
+	{ 
+		"neg", R"(@SP
+			A=M-1
+			M=-M)"
+	},
+	{ 
+		"eq", R"(@SP
+			M=M-1
+			A=M
+			D=M
+			A=A-1
+			D=D-M
+			@EQ_TRUE_{id}
+			D;JEQ
+			@SP
+			A=M-1
+			M=1
+			@EQ_END_{id}
+			0;JMP
+			(EQ_TRUE_{id})
+			@SP
+			A=A-1
+			M=1
+			(EQ_END_{id}))" 
+	},
+	{ "gt", "" },
+	{ "lt", "" },
+	{ "and", "" },
+	{ "or", "" },
+	{ "not", "" },
+};
+
 class Parser {
 	public:
 		vector<string> commands;
@@ -46,6 +94,10 @@ class Parser {
 
 			if (firstWord == "goto") {
 				return "C_GOTO";
+			}
+
+			if (firstWord == "if-goto") {
+				return "C_IF";
 			}
 
 			return "";
