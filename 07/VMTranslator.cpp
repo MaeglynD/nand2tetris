@@ -4,16 +4,17 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <experimental/filesystem>
 using namespace std;
+namespace fs = std::experimental::filesystem;
 
 class Parser {
 	public:
 		vector<string> commands;
 
-		Parser(string fileName) {
+		Parser(ofstream &translatedFile, string fileName) {
 			string line;
-			ifstream assemblyFile(fileName + ".vm");
-			ofstream translatedFile(fileName + ".asm");
+			ifstream assemblyFile(fileName);
 
 			while(getline(assemblyFile, line)) {
 				line = line.substr(0, line.find("//"));
@@ -26,7 +27,6 @@ class Parser {
 			}
 
 			assemblyFile.close();
-			translatedFile.close();
 		}
 
 		string commandType(string command) {
@@ -54,12 +54,25 @@ class Parser {
 
 
 int main(){
-	string fileName;
-	// cin >> fileName; 
-	
-	Parser parser(fileName);
+	string userInput;
+	cin >> userInput;
+	ofstream translatedFile(userInput + ".hack");
+
+	if (fs::is_directory(userInput)) {
+		for (auto const& file : fs::directory_iterator(userInput)) {
+			auto path = file.path();
+			
+			if (path.extension() == ".vm") {
+				Parser parser(translatedFile, path.filename().string());
+			}
+		}
+	} else {
+		Parser parser(translatedFile, userInput + ".vm");
+	}
+
+	translatedFile.close();
+
 	cout << "Your .asm file is now ready. Enjoy.";
 	
-
 	return 0;
 }
