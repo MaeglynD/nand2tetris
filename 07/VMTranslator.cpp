@@ -5,9 +5,12 @@
 #include <unordered_map>
 #include <algorithm>
 #include <experimental/filesystem>
+#include <regex>
+#include <cctype>
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
+int identifier = 0;
 unordered_map<string, string> arithmeticTable {
 	{ 
 		"add", R"(@SP
@@ -137,27 +140,17 @@ class Parser {
 		string commandType(string command) {
 			string firstWord = command.substr(0, command.find(" "));
 
-			if (firstWord == "call") {
-				return "C_CALL";
-			}
-			
-			if (firstWord == "return") {
-				return "C_RETURN";
+			if (arithmeticTable.find(firstWord) != arithmeticTable.end()) {
+				return arithmeticTable[firstWord];
 			}
 
-			if (firstWord == "function") {
-				return "C_FUNCTION";
-			}
+			transform(firstWord.begin(), firstWord.end(), firstWord.begin(), ::toupper);
 
-			if (firstWord == "goto") {
-				return "C_GOTO";
-			}
+			return "C_" + firstWord;
+		}
 
-			if (firstWord == "if-goto") {
-				return "C_IF";
-			}
-
-			return "";
+		string parseArithmetic(string command) {
+			return regex_replace(command, regex("{id}"), to_string(identifier));
 		}
 };
 
