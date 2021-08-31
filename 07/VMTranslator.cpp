@@ -137,6 +137,33 @@ class Parser {
 			assemblyFile.close();
 		}
 
+		string getNthWord(string command, int n) {
+			string word = "";
+			int delimCount = 0;
+
+			for (int i = 0; i < command.size(); ++i) {
+				if (command[i] == ' ') {
+					delimCount++;
+					
+					if (delimCount == n) {
+						return word;
+					} else {
+						word = "";
+					}
+				} else {
+					word += command[i];
+				}
+			}
+		}
+
+		string arg1(string command) {
+			return getNthWord(command, 1);
+		}
+
+		int arg2(string command) {
+			return stoi(getNthWord(command, 2));
+		}
+
 		string commandType(string command) {
 			string firstWord = command.substr(0, command.find(" "));
 
@@ -153,7 +180,6 @@ class Parser {
 			return regex_replace(command, regex("{id}"), to_string(identifier));
 		}
 };
-
 
 int main(){
 	string userInput;
