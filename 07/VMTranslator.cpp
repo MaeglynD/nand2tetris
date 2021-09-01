@@ -157,11 +157,11 @@ class Parser {
 		}
 
 		string arg1(string command) {
-			return getNthWord(command, 1);
+			return getNthWord(command, 2);
 		}
 
 		int arg2(string command) {
-			return stoi(getNthWord(command, 2));
+			return stoi(getNthWord(command, 3));
 		}
 
 		string commandType(string command) {
