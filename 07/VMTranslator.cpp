@@ -10,7 +10,6 @@
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
-int identifier = 0;
 unordered_map<string, string> arithmeticTable {
 	{ 
 		"add", R"(@SP
@@ -118,9 +117,11 @@ unordered_map<string, string> arithmeticTable {
 
 class Parser {
 	public:
-		vector<string> commands;
-
-		Parser(ofstream &translatedFile, string fileName) {
+		string command;
+		int &identifier;
+		ofstream &translatedFile;
+		
+		Parser(ofstream &file, string fileName, int &id) : translatedFile(file), identifier(id) {
 			string line;
 			ifstream assemblyFile(fileName);
 
@@ -130,14 +131,20 @@ class Parser {
 				line.erase(line.find_last_not_of("\t\n\v\f\r ") + 1);
 
 				if (line != "") {
-					commands.push_back(line);
+					command = line;
+					string type = commandType();
+
+					if (type == "C_ARITHMETIC") {
+						writeArithmetic();
+					}
+
 				}
 			}
 
 			assemblyFile.close();
 		}
 
-		string getNthWord(string command, int n) {
+		string getNthWord(int n) {
 			string word = "";
 			int delimCount = 0;
 
@@ -156,19 +163,19 @@ class Parser {
 			}
 		}
 
-		string arg1(string command) {
-			return getNthWord(command, 2);
+		string arg1() {
+			return getNthWord(2);
 		}
 
-		int arg2(string command) {
-			return stoi(getNthWord(command, 3));
+		int arg2() {
+			return stoi(getNthWord(3));
 		}
 
-		string commandType(string command) {
+		string commandType() {
 			string firstWord = command.substr(0, command.find(" "));
-
+			
 			if (arithmeticTable.find(firstWord) != arithmeticTable.end()) {
-				return arithmeticTable[firstWord];
+				return "C_ARITHMETIC";
 			}
 
 			transform(firstWord.begin(), firstWord.end(), firstWord.begin(), ::toupper);
@@ -176,14 +183,16 @@ class Parser {
 			return "C_" + firstWord;
 		}
 
-		string parseArithmetic(string command) {
-			return regex_replace(command, regex("{id}"), to_string(identifier));
+		void writeArithmetic() {
+			translatedFile << regex_replace(command, regex("{id}"), to_string(identifier)) << endl;
 		}
 };
 
 int main(){
+	int identifier = 0;
 	string userInput;
 	cin >> userInput;
+	
 	ofstream translatedFile(userInput + ".hack");
 
 	if (fs::is_directory(userInput)) {
@@ -191,11 +200,11 @@ int main(){
 			auto path = file.path();
 			
 			if (path.extension() == ".vm") {
-				Parser parser(translatedFile, path.filename().string());
+				Parser parser(translatedFile, path.filename().string(), identifier);
 			}
 		}
 	} else {
-		Parser parser(translatedFile, userInput + ".vm");
+		Parser parser(translatedFile, userInput + ".vm", identifier);
 	}
 
 	translatedFile.close();
