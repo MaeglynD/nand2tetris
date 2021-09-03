@@ -138,6 +138,33 @@ class Parser {
 						writeArithmetic();
 					}
 
+					if (type == "C_PUSH" || type == "C_POP") {
+						writePushPop();
+					}
+
+					if (type == "C_LABEL") {
+						// 
+					}
+
+					if (type == "C_GOTO") {
+						// 
+					}
+
+					if (type == "C_IF-GOTO") {
+						// 
+					}
+
+					if (type == "C_FUNCTION") {
+						// 
+					}
+
+					if (type == "C_RETURN") {
+						// 
+					}
+
+					if (type == "C_CALL") {
+						// 
+					}
 				}
 			}
 
@@ -185,6 +212,12 @@ class Parser {
 
 		void writeArithmetic() {
 			translatedFile << regex_replace(command, regex("{id}"), to_string(identifier)) << endl;
+		}
+		
+		void writePushPop() {
+			string argument1 = arg1();
+			int argument2 = arg2();
+
 		}
 };
 
