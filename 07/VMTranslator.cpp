@@ -210,14 +210,34 @@ class Parser {
 			return "C_" + firstWord;
 		}
 
+		string format(string removeString, string replaceString) {
+			return regex_replace(command, regex(removeString), replaceString);
+		}
+
 		void writeArithmetic() {
-			translatedFile << regex_replace(command, regex("{id}"), to_string(identifier)) << endl;
+			translatedFile << format("{id}", to_string(identifier)) << endl;
 		}
 		
 		void writePushPop() {
 			string argument1 = arg1();
 			int argument2 = arg2();
+			string pushEnd = R"(@SP
+				M=M+1
+				A=M-1
+				M=D
+			)";
+			string popStart = R"(
 
+			)";
+
+			if (argument1 == "local") {
+				// 
+			}
+
+			if (argument1 == "argument") {
+				// 
+			}
+			
 		}
 };
 
