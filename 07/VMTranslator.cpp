@@ -123,7 +123,7 @@ unordered_map<string, string> argumentTable {
 	{ "pointer", "THIS" },
 	{ "temp", "5" },
 	{ "static", "" },
-	{ "constant", "0" },
+	{ "constant", "" },
 };
 
 class Parser {
@@ -302,6 +302,13 @@ int main(){
 
 	cin >> userInput;
 	ofstream translatedFile(userInput + ".asm");
+	
+	// Temporary init of sp
+	translatedFile << R"(@256
+D=A
+@SP
+M=D
+)";
 
 	if (fs::is_directory(userInput)) {
 		for (auto const& file : fs::directory_iterator(userInput)) {
