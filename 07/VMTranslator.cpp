@@ -115,15 +115,27 @@ unordered_map<string, string> arithmeticTable {
 	},
 };
 
+unordered_map<string, string> argumentTable {
+	{ "local", "LCL" },
+	{ "argument", "ARG" },
+	{ "this", "THIS" },
+	{ "that", "THAT" },
+	{ "pointer", "THIS" },
+	{ "temp", "5" },
+	{ "static", "" },
+	{ "constant", "0" },
+};
+
 class Parser {
 	public:
 		string command;
+		string name;
 		int &identifier;
 		ofstream &translatedFile;
 		
-		Parser(ofstream &file, string fileName, int &id) : translatedFile(file), identifier(id) {
+		Parser(ofstream &file, string fileName, int &id) : translatedFile(file), identifier(id), name(fileName) {
 			string line;
-			ifstream assemblyFile(fileName);
+			ifstream assemblyFile(name);
 
 			while(getline(assemblyFile, line)) {
 				line = line.substr(0, line.find("//"));
@@ -139,7 +151,7 @@ class Parser {
 					}
 
 					if (type == "C_PUSH" || type == "C_POP") {
-						writePushPop();
+						writePushPop(type);
 					}
 
 					if (type == "C_LABEL") {
@@ -210,34 +222,54 @@ class Parser {
 			return "C_" + firstWord;
 		}
 
-		string format(string removeString, string replaceString) {
-			return regex_replace(command, regex(removeString), replaceString);
+		string format(string content, unordered_map<string, string> &replaceStrings) {
+			for (auto &str : replaceStrings) {
+				while (content.find(str.first) != string::npos) {
+					content.replace(content.find(str.first), str.first.length(), str.second);
+				}
+			}
+			return content;
 		}
 
 		void writeArithmetic() {
-			translatedFile << format("{id}", to_string(identifier)) << endl;
+			translatedFile << format(arithmeticTable[command], {{"{id}", to_string(identifier)}}) << endl;
 		}
 		
-		void writePushPop() {
-			string argument1 = arg1();
-			int argument2 = arg2();
-			string pushEnd = R"(@SP
-				M=M+1
-				A=M-1
-				M=D
-			)";
-			string popStart = R"(
+		void writePushPop(string type) {
+			string argument1 = arg1() ;
+			string argument2 = to_string(arg2());
+			string arg1Abbreviation = argumentTable[argument1];
+			string aOrM = (argument1 == "pointer" || argument1 == "constant" ? "A" : "M");
+			string pushPopTemplate = type == "C_PUSH" 
+				? R"(@{arg1}
+					D={aOrM}
+					@{arg2}
+					A=D+A
+					D=M
+					@SP
+					M=M+1
+					A=M-1
+					M=D)"
+				: R"(@{arg1}
+					D={aOrM}
+					@{arg2}
+					D=D+A
+					@translator_temp
+					M=D
+					@SP
+					M=M-1
+					A=M
+					D=M
+					@translator_temp
+					A=M
+					M=D)";
 
-			)";
-
-			if (argument1 == "local") {
-				// 
-			}
-
-			if (argument1 == "argument") {
-				// 
+			if (argument1 == "static") {
+				arg1Abbreviation = name + "." + argument2;
+				argument2 = "0";
 			}
 			
+			translatedFile << format(pushPopTemplate, {{ "{arg1}", arg1Abbreviation }, { "{arg2}", argument2 }, { "{aOrM}", aOrM }}) << endl;
 		}
 };
 
@@ -263,6 +295,6 @@ int main(){
 	translatedFile.close();
 
 	cout << "Your .asm file is now ready. Enjoy.";
-	
+
 	return 0;
 }
