@@ -135,7 +135,7 @@ class Parser {
 		
 		Parser(ofstream &file, string fileName, int &id) : translatedFile(file), identifier(id), name(fileName) {
 			string line;
-			ifstream assemblyFile(name);
+			ifstream assemblyFile(name + ".vm");
 
 			while(getline(assemblyFile, line)) {
 				line = line.substr(0, line.find("//"));
@@ -183,6 +183,11 @@ class Parser {
 			assemblyFile.close();
 		}
 
+		string trimTabs(string text) {
+			text.erase(remove(text.begin(), text.end(), '\t'), text.end());
+			return text;
+		}
+
 		string getNthWord(int n) {
 			string word = "";
 			int delimCount = 0;
@@ -222,13 +227,13 @@ class Parser {
 			return "C_" + firstWord;
 		}
 
-		string format(string content, unordered_map<string, string> &replaceStrings) {
+		string format(string content, unordered_map<string, string> replaceStrings) {
 			for (auto &str : replaceStrings) {
 				while (content.find(str.first) != string::npos) {
 					content.replace(content.find(str.first), str.first.length(), str.second);
 				}
 			}
-			return content;
+			return trimTabs(content);
 		}
 
 		void writeArithmetic() {
@@ -236,24 +241,42 @@ class Parser {
 		}
 		
 		void writePushPop(string type) {
-			string argument1 = arg1() ;
+			string argument1 = arg1();
 			string argument2 = to_string(arg2());
-			string arg1Abbreviation = argumentTable[argument1];
+			string arg1Translated = argumentTable[argument1];
 			string aOrM = (argument1 == "pointer" || argument1 == "constant" ? "A" : "M");
-			string pushPopTemplate = type == "C_PUSH" 
-				? R"(@{arg1}
-					D={aOrM}
-					@{arg2}
-					A=D+A
-					D=M
+			string pushPopTemplate = 
+				R"(@{arg1}
+				D={aOrM})";
+
+			if (argument1 == "constant") {
+				arg1Translated = argument2;
+			}
+
+			if (argument1 == "static") {
+				arg1Translated = name + "." + argument2;
+			}
+			
+			// Add the second argument to the equation, if not already handled via creation of the first argument
+			// (in other words, if its not static or constant, add arg2)
+			if (argument1 != "static" && argument1 != "constant") {
+				pushPopTemplate += type == "C_PUSH" 
+					? R"(
+						@{arg2}
+						A=D+A
+						D=M)"
+					: R"(
+						@{arg2}
+						D=D+A)";
+			}
+
+			pushPopTemplate += type == "C_PUSH" 
+				? R"(
 					@SP
 					M=M+1
 					A=M-1
 					M=D)"
-				: R"(@{arg1}
-					D={aOrM}
-					@{arg2}
-					D=D+A
+				: R"(
 					@translator_temp
 					M=D
 					@SP
@@ -263,33 +286,33 @@ class Parser {
 					@translator_temp
 					A=M
 					M=D)";
-
-			if (argument1 == "static") {
-				arg1Abbreviation = name + "." + argument2;
-				argument2 = "0";
-			}
 			
-			translatedFile << format(pushPopTemplate, {{ "{arg1}", arg1Abbreviation }, { "{arg2}", argument2 }, { "{aOrM}", aOrM }}) << endl;
+			translatedFile << 
+				format(pushPopTemplate, {
+					{ "{arg1}", arg1Translated },
+					{ "{arg2}", argument2 },
+					{ "{aOrM}", aOrM }
+				}) << endl;
 		}
 };
 
 int main(){
 	int identifier = 0;
 	string userInput;
+
 	cin >> userInput;
-	
-	ofstream translatedFile(userInput + ".hack");
+	ofstream translatedFile(userInput + ".asm");
 
 	if (fs::is_directory(userInput)) {
 		for (auto const& file : fs::directory_iterator(userInput)) {
 			auto path = file.path();
 			
 			if (path.extension() == ".vm") {
-				Parser parser(translatedFile, path.filename().string(), identifier);
+				Parser parser(translatedFile, path.stem().string(), identifier);
 			}
 		}
 	} else {
-		Parser parser(translatedFile, userInput + ".vm", identifier);
+		Parser parser(translatedFile, userInput, identifier);
 	}
 
 	translatedFile.close();
