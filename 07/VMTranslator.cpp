@@ -307,13 +307,6 @@ int main(){
 
 	cin >> userInput;
 	ofstream translatedFile(userInput + ".asm");
-	
-	// Temporary init of sp
-	translatedFile << R"(@256
-D=A
-@SP
-M=D
-)";
 
 	if (fs::is_directory(userInput)) {
 		for (auto const& file : fs::directory_iterator(userInput)) {
