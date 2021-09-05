@@ -178,6 +178,8 @@ class Parser {
 						// 
 					}
 				}
+
+				identifier++;
 			}
 
 			assemblyFile.close();
@@ -244,7 +246,10 @@ class Parser {
 			string argument1 = arg1();
 			string argument2 = to_string(arg2());
 			string arg1Translated = argumentTable[argument1];
-			string aOrM = (argument1 == "pointer" || argument1 == "constant" ? "A" : "M");
+			string aOrM = 
+				argument1 == "pointer" ||
+				argument1 == "constant" ||
+				(argument1 == "static" && type == "C_POP") ? "A" : "M";
 			string pushPopTemplate = 
 				R"(@{arg1}
 				D={aOrM})";
@@ -270,7 +275,7 @@ class Parser {
 						D=D+A)";
 			}
 
-			pushPopTemplate += type == "C_PUSH" 
+			pushPopTemplate += type == "C_PUSH"
 				? R"(
 					@SP
 					M=M+1
@@ -286,7 +291,7 @@ class Parser {
 					@translator_temp
 					A=M
 					M=D)";
-			
+
 			translatedFile << 
 				format(pushPopTemplate, {
 					{ "{arg1}", arg1Translated },
