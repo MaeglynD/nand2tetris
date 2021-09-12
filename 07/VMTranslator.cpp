@@ -155,28 +155,30 @@ class Parser {
 					}
 
 					if (type == "C_LABEL") {
-						// 
+						writeLabel();
 					}
 
 					if (type == "C_GOTO") {
-						// 
+						writeGoto();
 					}
 
 					if (type == "C_IF-GOTO") {
-						// 
+						writeIfGoto();
 					}
 
 					if (type == "C_FUNCTION") {
-						// 
+						writeFunction();
 					}
 
 					if (type == "C_RETURN") {
-						// 
+						writeReturn();
 					}
 
 					if (type == "C_CALL") {
-						// 
+						writeCall();
 					}
+
+					translatedFile << endl;
 				}
 
 				identifier++;
@@ -229,7 +231,7 @@ class Parser {
 			return "C_" + firstWord;
 		}
 
-		string format(string content, unordered_map<string, string> replaceStrings) {
+		string format(string content, unordered_map<string, string> replaceStrings = {{}}) {
 			for (auto &str : replaceStrings) {
 				while (content.find(str.first) != string::npos) {
 					content.replace(content.find(str.first), str.first.length(), str.second);
@@ -238,8 +240,36 @@ class Parser {
 			return trimTabs(content);
 		}
 
+		void writeLabel() {
+			translatedFile << "(" + arg1() + ")";
+		}
+
+		void writeGoto() {
+			translatedFile << "@" + arg1();
+		}
+
+		void writeIfGoto() {
+			translatedFile << format(R"(@SP
+				D=A-1
+				D;JEQ)");
+		}
+
+		void writeFunction() {
+			string funcTemplate = R"(({arg1}))";
+
+			for (int i = 0; i < arg2(); i++) {
+					funcTemplate += R"(
+						@SP
+						M=M+1
+						A=M-1
+						M=0)";
+			}
+
+			translatedFile << format(funcTemplate, {{ "{arg1}", arg1() }});
+		}
+		
 		void writeArithmetic() {
-			translatedFile << format(arithmeticTable[command], {{"{id}", to_string(identifier)}}) << endl;
+			translatedFile << format(arithmeticTable[command], {{"{id}", to_string(identifier)}});
 		}
 		
 		void writePushPop(string type) {
@@ -297,7 +327,111 @@ class Parser {
 					{ "{arg1}", arg1Translated },
 					{ "{arg2}", argument2 },
 					{ "{aOrM}", aOrM }
-				}) << endl;
+				});
+		}
+
+		void writeReturn() {
+			translatedFile << format(R"(@LCL
+				D=M
+				@FRAME
+				M=D
+				@5
+				A=D-A
+				D=M
+				@RET
+				M=D
+				@SP
+				M=M-1
+				A=M
+				D=M
+				@ARG
+				A=M
+				M=D
+				@ARG
+				D=M
+				@SP
+				M=D
+				@FRAME
+				A=M-1
+				D=M
+				@THAT
+				M=D
+				@2
+				D=A
+				@FRAME
+				A=M-D
+				D=M
+				@THIS
+				M=D
+				@3
+				D=A
+				@FRAME
+				A=M-D
+				D=M
+				@ARG
+				M=D
+				@4
+				D=A
+				@FRAME
+				A=M-D
+				D=M
+				@LCL
+				M=D
+				@RET
+				A=M
+				0;JMP)");
+		}
+
+		void writeCall() {
+			translatedFile << format(R"(@{arg1}$return.${id}
+				D=A
+				@SP
+				M=M+1
+				A=M-1
+				M=D
+				@LCL
+				D=M
+				@SP
+				M=M+1
+				A=M-1
+				M=D
+				@ARG
+				D=M
+				@SP
+				M=M+1
+				A=M-1
+				M=D
+				@THIS
+				D=M
+				@SP
+				M=M+1
+				A=M-1
+				M=D
+				@THAT
+				D=M
+				@SP
+				M=M+1
+				A=M-1
+				M=D
+				@SP
+				D=M
+				@{arg2}
+				D=D-A
+				@5
+				D=D-A
+				@ARG
+				M=D
+				@SP
+				D=M
+				@LCL
+				M=D
+				@{arg1}
+				0;JMP
+				({arg1}$return.{id}))", {
+					{ "{arg1}", arg1() },
+					{ "{arg2}", to_string(arg2()) },
+					{ "{id}", to_string(identifier) }
+				});
 		}
 };
 
@@ -307,6 +441,12 @@ int main(){
 
 	cin >> userInput;
 	ofstream translatedFile(userInput + ".asm");
+	
+	translatedFile << R"(@256
+		D=A
+		@SP
+		M=D)";
+		
 
 	if (fs::is_directory(userInput)) {
 		for (auto const& file : fs::directory_iterator(userInput)) {
