@@ -128,14 +128,15 @@ unordered_map<string, string> argumentTable {
 
 class Parser {
 	public:
+		string fileName;
+		string functionName;
 		string command;
-		string name;
 		int &identifier;
 		ofstream &translatedFile;
 		
-		Parser(ofstream &file, string fileName, int &id) : translatedFile(file), identifier(id), name(fileName) {
+		Parser(ofstream &_file, string _path, string _name, int &_id) : translatedFile(_file), functionName(_name), fileName(_name), identifier(_id) {
 			string line;
-			ifstream assemblyFile(name + ".vm");
+			ifstream assemblyFile(_path);
 
 			while(getline(assemblyFile, line)) {
 				line = line.substr(0, line.find("//"));
@@ -231,7 +232,7 @@ class Parser {
 			return "C_" + firstWord;
 		}
 
-		string format(string content, unordered_map<string, string> replaceStrings = {{}}) {
+		string format(string content, unordered_map<string, string> replaceStrings = {}) {
 			for (auto &str : replaceStrings) {
 				while (content.find(str.first) != string::npos) {
 					content.replace(content.find(str.first), str.first.length(), str.second);
@@ -241,21 +242,36 @@ class Parser {
 		}
 
 		void writeLabel() {
-			translatedFile << "(" + arg1() + ")";
+			translatedFile << format("({funcName}${arg1})", {
+				{ "{funcName}", functionName }, 
+				{ "{arg1}", arg1() }
+			});
 		}
 
 		void writeGoto() {
-			translatedFile << "@" + arg1();
+			translatedFile << format(R"(@{funcName}${arg1}
+				0;JMP
+			)", {
+				{ "{funcName}", functionName }, 
+				{ "{arg1}", arg1() }
+			});
 		}
 
 		void writeIfGoto() {
 			translatedFile << format(R"(@SP
-				D=A-1
-				D;JEQ)");
+				M=M-1
+				A=M
+				D=M
+				@{funcName}${arg1}
+				D;JNE)", {
+					{ "{arg1}", arg1() },
+					{ "{funcName}", functionName }
+				});
 		}
 
 		void writeFunction() {
 			string funcTemplate = R"(({arg1}))";
+			functionName = arg1();
 
 			for (int i = 0; i < arg2(); i++) {
 					funcTemplate += R"(
@@ -265,7 +281,7 @@ class Parser {
 						M=0)";
 			}
 
-			translatedFile << format(funcTemplate, {{ "{arg1}", arg1() }});
+			translatedFile << format(funcTemplate, {{ "{arg1}", functionName }});
 		}
 		
 		void writeArithmetic() {
@@ -289,7 +305,7 @@ class Parser {
 			}
 
 			if (argument1 == "static") {
-				arg1Translated = name + "." + argument2;
+				arg1Translated = fileName + "." + argument2;
 			}
 			
 			// Add the second argument to the equation, if not already handled via creation of the first argument
@@ -322,12 +338,11 @@ class Parser {
 					A=M
 					M=D)";
 
-			translatedFile << 
-				format(pushPopTemplate, {
-					{ "{arg1}", arg1Translated },
-					{ "{arg2}", argument2 },
-					{ "{aOrM}", aOrM }
-				});
+			translatedFile << format(pushPopTemplate, {
+				{ "{arg1}", arg1Translated },
+				{ "{arg2}", argument2 },
+				{ "{aOrM}", aOrM }
+			});
 		}
 
 		void writeReturn() {
@@ -348,7 +363,7 @@ class Parser {
 				A=M
 				M=D
 				@ARG
-				D=M
+				D=M+1
 				@SP
 				M=D
 				@FRAME
@@ -383,7 +398,7 @@ class Parser {
 		}
 
 		void writeCall() {
-			translatedFile << format(R"(@{arg1}$return.${id}
+			translatedFile << format(R"(@{arg1}$return.{id}
 				D=A
 				@SP
 				M=M+1
@@ -435,29 +450,77 @@ class Parser {
 		}
 };
 
+void writeBootstrap(ofstream &translatedFile) {
+	translatedFile << R"(@256
+		D=A
+		@SP
+		M=D
+		@Sys.init$return.0
+		D=A
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@LCL
+		D=M
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@ARG
+		D=M
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@THIS
+		D=M
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@THAT
+		D=M
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@SP
+		D=M
+		@5
+		D=D-A
+		@ARG
+		M=D
+		@SP
+		D=M
+		@LCL
+		M=D
+		@Sys.init
+		0;JMP
+		(Sys.init$return.0)
+		)";
+}
+
 int main(){
 	int identifier = 0;
 	string userInput;
 
 	cin >> userInput;
 	ofstream translatedFile(userInput + ".asm");
-	
-	translatedFile << R"(@256
-		D=A
-		@SP
-		M=D)";
-		
 
+	writeBootstrap(translatedFile);
+		
 	if (fs::is_directory(userInput)) {
 		for (auto const& file : fs::directory_iterator(userInput)) {
 			auto path = file.path();
 			
 			if (path.extension() == ".vm") {
-				Parser parser(translatedFile, path.stem().string(), identifier);
+				cout << fs::absolute(path) << endl;
+				Parser parser(translatedFile, fs::absolute(path).string(), path.stem().string(), identifier);
 			}
 		}
 	} else {
-		Parser parser(translatedFile, userInput, identifier);
+		Parser parser(translatedFile, userInput + ".vm", userInput, identifier);
 	}
 
 	translatedFile.close();

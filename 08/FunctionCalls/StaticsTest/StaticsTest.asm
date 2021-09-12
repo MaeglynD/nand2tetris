@@ -1,0 +1,669 @@
+@256
+		D=A
+		@SP
+		M=D
+		@Sys.init$return.0
+		D=A
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@LCL
+		D=M
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@ARG
+		D=M
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@THIS
+		D=M
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@THAT
+		D=M
+		@SP
+		M=M+1
+		A=M-1
+		M=D
+		@SP
+		D=M
+		@5
+		D=D-A
+		@ARG
+		M=D
+		@SP
+		D=M
+		@LCL
+		M=D
+		@Sys.init
+		0;JMP
+		(Sys.init$return.0)
+		//
+(Class1.set)
+//
+ // argument0
+@ARG
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // static0
+@Class1.0
+D=A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+//
+ // argument1
+@ARG
+D=M
+@1
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // static1
+@Class1.1
+D=A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+//
+ // constant0
+@0
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+//
+@LCL
+D=M
+@FRAME
+M=D
+@5
+A=D-A
+D=M
+@RET
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@ARG
+A=M
+M=D
+@ARG
+D=M+1
+@SP
+M=D
+@FRAME
+A=M-1
+D=M
+@THAT
+M=D
+@2
+D=A
+@FRAME
+A=M-D
+D=M
+@THIS
+M=D
+@3
+D=A
+@FRAME
+A=M-D
+D=M
+@ARG
+M=D
+@4
+D=A
+@FRAME
+A=M-D
+D=M
+@LCL
+M=D
+@RET
+A=M
+0;JMP
+//
+(Class1.get)
+//
+ // static0
+@Class1.0
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // static1
+@Class1.1
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // sub
+@SP
+M=M-1
+A=M
+D=M
+A=A-1
+M=M-D
+//
+@LCL
+D=M
+@FRAME
+M=D
+@5
+A=D-A
+D=M
+@RET
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@ARG
+A=M
+M=D
+@ARG
+D=M+1
+@SP
+M=D
+@FRAME
+A=M-1
+D=M
+@THAT
+M=D
+@2
+D=A
+@FRAME
+A=M-D
+D=M
+@THIS
+M=D
+@3
+D=A
+@FRAME
+A=M-D
+D=M
+@ARG
+M=D
+@4
+D=A
+@FRAME
+A=M-D
+D=M
+@LCL
+M=D
+@RET
+A=M
+0;JMP
+//
+(Class2.set)
+//
+ // argument0
+@ARG
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // static0
+@Class2.0
+D=A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+//
+ // argument1
+@ARG
+D=M
+@1
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // static1
+@Class2.1
+D=A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+//
+ // constant0
+@0
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+//
+@LCL
+D=M
+@FRAME
+M=D
+@5
+A=D-A
+D=M
+@RET
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@ARG
+A=M
+M=D
+@ARG
+D=M+1
+@SP
+M=D
+@FRAME
+A=M-1
+D=M
+@THAT
+M=D
+@2
+D=A
+@FRAME
+A=M-D
+D=M
+@THIS
+M=D
+@3
+D=A
+@FRAME
+A=M-D
+D=M
+@ARG
+M=D
+@4
+D=A
+@FRAME
+A=M-D
+D=M
+@LCL
+M=D
+@RET
+A=M
+0;JMP
+//
+(Class2.get)
+//
+ // static0
+@Class2.0
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // static1
+@Class2.1
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // sub
+@SP
+M=M-1
+A=M
+D=M
+A=A-1
+M=M-D
+//
+@LCL
+D=M
+@FRAME
+M=D
+@5
+A=D-A
+D=M
+@RET
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@ARG
+A=M
+M=D
+@ARG
+D=M+1
+@SP
+M=D
+@FRAME
+A=M-1
+D=M
+@THAT
+M=D
+@2
+D=A
+@FRAME
+A=M-D
+D=M
+@THIS
+M=D
+@3
+D=A
+@FRAME
+A=M-D
+D=M
+@ARG
+M=D
+@4
+D=A
+@FRAME
+A=M-D
+D=M
+@LCL
+M=D
+@RET
+A=M
+0;JMP
+//
+(Sys.init)
+//
+ // constant6
+@6
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // constant8
+@8
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+//
+@Class1.set$return.50
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+@LCL
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@ARG
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THIS
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THAT
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@SP
+D=M
+@2
+D=D-A
+@5
+D=D-A
+@ARG
+M=D
+@SP
+D=M
+@LCL
+M=D
+@Class1.set
+0;JMP
+(Class1.set$return.50)
+//
+ // temp0
+@5
+D=M
+@0
+D=D+A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+//
+ // constant23
+@23
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // constant15
+@15
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+//
+@Class2.set$return.54
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+@LCL
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@ARG
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THIS
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THAT
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@SP
+D=M
+@2
+D=D-A
+@5
+D=D-A
+@ARG
+M=D
+@SP
+D=M
+@LCL
+M=D
+@Class2.set
+0;JMP
+(Class2.set$return.54)
+//
+ // temp0
+@5
+D=M
+@0
+D=D+A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+//
+@Class1.get$return.56
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+@LCL
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@ARG
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THIS
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THAT
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@SP
+D=M
+@0
+D=D-A
+@5
+D=D-A
+@ARG
+M=D
+@SP
+D=M
+@LCL
+M=D
+@Class1.get
+0;JMP
+(Class1.get$return.56)
+//
+@Class2.get$return.57
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+@LCL
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@ARG
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THIS
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THAT
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@SP
+D=M
+@0
+D=D-A
+@5
+D=D-A
+@ARG
+M=D
+@SP
+D=M
+@LCL
+M=D
+@Class2.get
+0;JMP
+(Class2.get$return.57)
+//
+(Sys.init$WHILE)
+//
+@Sys.init$WHILE
+0;JMP
+

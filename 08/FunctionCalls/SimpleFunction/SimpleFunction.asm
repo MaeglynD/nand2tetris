@@ -1,0 +1,137 @@
+@256
+		D=A
+		@SP
+		M=D
+	//
+(SimpleFunction.test)
+@SP
+M=M+1
+A=M-1
+M=0
+@SP
+M=M+1
+A=M-1
+M=0
+//
+ // local0
+@LCL
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // local1
+@LCL
+D=M
+@1
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // add
+@SP
+M=M-1
+A=M
+D=M
+A=A-1
+M=D+M
+//
+ // not
+@SP
+A=M-1
+M=!M
+//
+ // argument0
+@ARG
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // add
+@SP
+M=M-1
+A=M
+D=M
+A=A-1
+M=D+M
+//
+ // argument1
+@ARG
+D=M
+@1
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+//
+ // sub
+@SP
+M=M-1
+A=M
+D=M
+A=A-1
+M=M-D
+//
+@LCL
+D=M
+@FRAME
+M=D
+@5
+A=D-A
+D=M
+@RET
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@ARG
+A=M
+M=D
+@ARG
+D=M+1
+@SP
+M=D
+@FRAME
+A=M-1
+D=M
+@THAT
+M=D
+@2
+D=A
+@FRAME
+A=M-D
+D=M
+@THIS
+M=D
+@3
+D=A
+@FRAME
+A=M-D
+D=M
+@ARG
+M=D
+@4
+D=A
+@FRAME
+A=M-D
+D=M
+@LCL
+M=D
+@RET
+A=M
+0;JMP

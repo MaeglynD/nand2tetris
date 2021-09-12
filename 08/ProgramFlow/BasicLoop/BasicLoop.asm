@@ -1,0 +1,131 @@
+@256
+		D=A
+		@SP
+		M=D
+	 // constant0
+@0
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+ // local0
+@LCL
+D=M
+@0
+D=D+A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+(BasicLoop$LOOP_START)
+ // argument0
+@ARG
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+ // local0
+@LCL
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+ // add
+@SP
+M=M-1
+A=M
+D=M
+A=A-1
+M=D+M
+ // local0
+@LCL
+D=M
+@0
+D=D+A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+ // argument0
+@ARG
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+ // constant1
+@1
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+ // sub
+@SP
+M=M-1
+A=M
+D=M
+A=A-1
+M=M-D
+ // argument0
+@ARG
+D=M
+@0
+D=D+A
+@translator_temp
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@translator_temp
+A=M
+M=D
+ // argument0
+@ARG
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@BasicLoop$LOOP_START
+D;JNE
+ // local0
+@LCL
+D=M
+@0
+A=D+A
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
