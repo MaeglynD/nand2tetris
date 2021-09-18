@@ -1,0 +1,34 @@
+class Game {
+	field int size;
+	field int x, y;
+
+	constructor Game new() {
+		let size = 5;
+		do Screen.drawCircle(size + 3, size + 3, size);
+		do Screen.setColor(true);
+		do initGame();
+
+		return this;
+	}
+
+	method void initGame() {
+		var boolean playing; 
+		var char key;
+
+		let playing = true;
+
+		while (playing) {
+			while (~(key = 0)) {
+				let key = Keyboard.keyPressed();
+			}
+			
+			// Q
+			if (key = 81) { playing = false; }
+
+			if (key = 37) {  }
+
+		}
+
+		return;
+	}
+}
