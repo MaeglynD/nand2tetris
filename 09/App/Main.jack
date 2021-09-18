@@ -3,6 +3,8 @@ class Main {
 		var Game game;
 
 		let game = Game.new();
+		do game.initGame();
+		
 		return;
 	}
 }

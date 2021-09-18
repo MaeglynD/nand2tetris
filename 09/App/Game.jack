@@ -1,12 +1,13 @@
 class Game {
-	field int size;
-	field int x, y;
+	field int speed, radius, x, y;
 
 	constructor Game new() {
-		let size = 5;
-		do Screen.drawCircle(size + 3, size + 3, size);
-		do Screen.setColor(true);
-		do initGame();
+		let speed = 10;
+		let radius = 5;
+		let x = radius + 400;
+		let y = radius;
+
+		do Screen.drawCircle(x, y, radius);
 
 		return this;
 	}
@@ -16,18 +17,72 @@ class Game {
 		var char key;
 
 		let playing = true;
+		do Output.printString("welcome to the game");
 
 		while (playing) {
-			while (~(key = 0)) {
-				let key = Keyboard.keyPressed();
-			}
+			let key = Keyboard.keyPressed();
 			
-			// Q
-			if (key = 81) { playing = false; }
-
-			if (key = 37) {  }
-
+			if (key = 81) { let playing = false; }
+			if (key = 130) { do moveLeft(); }
+			if (key = 132) { do moveRight(); }
+			if (key = 131) { do moveUp(); }
+			if (key = 133) { do moveDown(); }
+			do Sys.wait(5);
 		}
+
+		return;
+	}
+
+	method void moveLeft() {
+		if (x > (radius + speed)) {
+			do erase();
+			let x = x - speed;
+			do draw();
+		}
+
+		return;
+	}
+
+	method void moveRight() {
+		if (x < (510 - radius - speed)) {
+			do erase();
+			let x = x + speed;
+			do draw();
+		} 
+
+		return;
+	}
+	
+	method void moveDown() {
+		if (y < (254 - radius - speed)) {
+			do erase();
+			let y = y + speed;
+			do draw();
+		} 
+
+		return;
+	}
+
+	method void moveUp() {
+		if (y > (radius + speed)) {
+			do erase();
+			let y = y - speed;
+			do draw();
+		} 
+
+		return;
+	}
+
+	method void erase() {
+		do Screen.setColor(false);
+		do Screen.drawCircle(x, y, radius);
+
+		return;
+	}
+
+	method void draw() {
+		do Screen.setColor(true);
+		do Screen.drawCircle(x, y, radius);
 
 		return;
 	}
