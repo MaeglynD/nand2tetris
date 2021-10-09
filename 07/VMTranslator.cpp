@@ -515,7 +515,6 @@ int main(){
 			auto path = file.path();
 			
 			if (path.extension() == ".vm") {
-				cout << fs::absolute(path) << endl;
 				Parser parser(translatedFile, fs::absolute(path).string(), path.stem().string(), identifier);
 			}
 		}

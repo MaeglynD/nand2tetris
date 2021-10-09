@@ -113,9 +113,42 @@ class JackTokenizer {
 
 };
 
+class JackAnalyzer {
+	JackAnalyzer(string userInput) {
+			if (fs::is_directory(userInput)) {
+				for (auto const& file : fs::directory_iterator(userInput)) {
+					auto path = file.path();
+					
+					if (path.extension() == ".jack") {
+						analyze("./" + userInput + "/" + path.stem().string());
+					}
+				}
+		} else {
+			// analuzye
+			analyze(userInput);
+		}
+	}
+
+	void analyze(string name) {
+		ofstream xmlFile(name + ".xml");
+		ifstream jackFile(name + ".jack");
+	}
+};
+
+
 int main(){
-	string userInput;
-	cin >> userInput;
+	// string userInput;
+	// cin >> userInput;
+
+	// if (fs::is_directory(userInput)) {
+	// 	for (auto const& file : fs::directory_iterator(userInput)) {
+	// 		auto path = file.path();
+			
+	// 		if (path.extension() == ".jack") {
+	// 			cout << fs::absolute(path).string() << endl;
+	// 		}
+	// 	}
+	// }
 
 	return 0;
 }
