@@ -115,16 +115,15 @@ class JackTokenizer {
 
 class JackAnalyzer {
 	JackAnalyzer(string userInput) {
-			if (fs::is_directory(userInput)) {
-				for (auto const& file : fs::directory_iterator(userInput)) {
-					auto path = file.path();
-					
-					if (path.extension() == ".jack") {
-						analyze("./" + userInput + "/" + path.stem().string());
-					}
+		if (fs::is_directory(userInput)) {
+			for (auto const& file : fs::directory_iterator(userInput)) {
+				auto path = file.path();
+				
+				if (path.extension() == ".jack") {
+					analyze("./" + userInput + "/" + path.stem().string());
 				}
+			}
 		} else {
-			// analuzye
 			analyze(userInput);
 		}
 	}
