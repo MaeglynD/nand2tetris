@@ -25,11 +25,6 @@ while (line in file) {
 			continue;
 		}
 
-		if (starts with '*/' && multiLineCommentActive) {
-			remove '*/'
-			continue;
-		}
-
 		if (starts with '//') {
 			break; // go to next line
 		}

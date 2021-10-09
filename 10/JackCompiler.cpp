@@ -10,6 +10,8 @@
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
+string symbols = "{}()[].,;+-*/&|<>=-";
+
 class CompilitationEngine {
 
 	CompilitationEngine() {
@@ -74,80 +76,157 @@ class CompilitationEngine {
 };
 
 class JackTokenizer {
+	public:
+		vector<string> tokenVec;
+		
+		JackTokenizer(ifstream& source) {
+			string line;
+			bool multiLineCommentActive = false;
+			
+			try {
+				while(getline(source, line)) {
+					while (!line.empty()) {
+						char firstChar = line[0];
+						string firstTwoChars = line.substr(0, 2);
 
-	JackTokenizer() {
-		// 
-	}
+						// Whitespace
+						if (isspace(firstChar)) {
+							line.erase(0, 1);
+							continue;
+						}
 
-	bool hasMoreTokens() {
-		return false;
-	}
-	
-	void advance() {
-		// 
-	}
+						// Single line comment
+						if (firstTwoChars == "//") {
+							break;
+						}
 
-	string tokenType() {
-		return "";
-	}
+						// During or at the end of a multi line comment
+						if (multiLineCommentActive) {
+							if (firstTwoChars == "*/") {
+								line.erase(0, 2);
+								multiLineCommentActive = false;
+							}
 
-	string keyWord() {
-		return "";
-	}
+							continue;
+						}
 
-	char symbol() {
-		return 'A';
-	}
+						// Start of a multi line comment
+						if (firstTwoChars == "/*") {
+							line.erase(0, 2);
+							multiLineCommentActive = true;
+							continue;
+						}
 
-	string identifier() {
-		return "";
-	}
+						// Int
+						if (isdigit(firstChar)) {
+							// Ints range from 0 - 32767. Max amount of digits can be 5
+							for (int i = 1; i < 6; i++) {
+								if (!isdigit(line[i])) {
+									tokenVec.push_back(line.substr(0, i - 1));
+									line.erase(0, i - 1);
+									break;
+								}
 
-	int intVal() {
-		return 0;
-	}
+								if (i > 5) {
+									throw ("Large int");
+								}
+							}
 
-	string stringVal() {
-		return "";
-	}
+							continue;
+						}
 
+						// String
+						if (firstChar == '"') {
+							int secondQuotationOccurrence = line.find_first_of(1, '"');
+
+							if (secondQuotationOccurrence == string::npos) {
+								throw ("String has no ending quotation");
+							}
+							
+							tokenVec.push_back(line.substr(0, secondQuotationOccurrence));
+							line.erase(0, secondQuotationOccurrence);
+
+							continue;
+						}
+
+						// Symbol
+						if (symbols.find_first_of(firstChar) != string::npos) {
+							tokenVec.push_back(string(1, firstChar));
+							line.erase(0, 1);
+							continue;
+						}
+
+						// Keywords
+					}
+				}
+			} catch (string errMsg) {
+				cout << endl << "Tokenizer Error: " << errMsg;
+			}
+		}
+
+		bool hasMoreTokens() {
+			return false;
+		}
+		
+		void advance() {
+			// 
+		}
+
+		string tokenType() {
+			return "";
+		}
+
+		string keyWord() {
+			return "";
+		}
+
+		char symbol() {
+			return 'A';
+		}
+
+		string identifier() {
+			return "";
+		}
+
+		int intVal() {
+			return 0;
+		}
+
+		string stringVal() {
+			return "";
+		}
 };
 
 class JackAnalyzer {
-	JackAnalyzer(string userInput) {
-		if (fs::is_directory(userInput)) {
-			for (auto const& file : fs::directory_iterator(userInput)) {
-				auto path = file.path();
-				
-				if (path.extension() == ".jack") {
-					analyze("./" + userInput + "/" + path.stem().string());
+	public:
+		JackAnalyzer(string userInput) {
+			if (fs::is_directory(userInput)) {
+				for (auto const& file : fs::directory_iterator(userInput)) {
+					auto path = file.path();
+					
+					if (path.extension() == ".jack") {
+						analyze("./" + userInput + "/" + path.stem().string());
+					}
 				}
+			} else {
+				analyze(userInput);
 			}
-		} else {
-			analyze(userInput);
 		}
-	}
 
-	void analyze(string name) {
-		ofstream xmlFile(name + ".xml");
-		ifstream jackFile(name + ".jack");
-	}
+		void analyze(string name) {
+			ofstream xmlFile(name + ".xml");
+			ifstream jackFile(name + ".jack");
+
+			JackTokenizer tokenizer(jackFile);
+		}
 };
 
 
 int main(){
-	// string userInput;
-	// cin >> userInput;
+	string userInput;
+	cin >> userInput;
 
-	// if (fs::is_directory(userInput)) {
-	// 	for (auto const& file : fs::directory_iterator(userInput)) {
-	// 		auto path = file.path();
-			
-	// 		if (path.extension() == ".jack") {
-	// 			cout << fs::absolute(path).string() << endl;
-	// 		}
-	// 	}
-	// }
+	JackAnalyzer analyzer(userInput);
 
 	return 0;
 }
