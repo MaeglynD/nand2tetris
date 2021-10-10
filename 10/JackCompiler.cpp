@@ -11,6 +11,34 @@ using namespace std;
 namespace fs = std::experimental::filesystem;
 
 string symbols = "{}()[].,;+-*/&|<>=-";
+unordered_map<string, string> keywords = {
+	{ "class", "" },
+	{ "constructor", "" },
+	{ "function", "" },
+	{ "method", "" },
+	{ "field", "" },
+	{ "static", "" },
+	{ "var", "" },
+	{ "int", "" },
+	{ "char", "" },
+	{ "boolean", "" },
+	{ "void", "" },
+	{ "true", "" },
+	{ "false", "" },
+	{ "null", "" },
+	{ "this", "" },
+	{ "let", "" },
+	{ "do", "" },
+	{ "if", "" },
+	{ "else", "" },
+	{ "while", "" },
+	{ "return", "" },
+};
+
+struct Token {
+	string token;
+	string type;
+};
 
 class CompilitationEngine {
 
@@ -77,8 +105,9 @@ class CompilitationEngine {
 
 class JackTokenizer {
 	public:
-		vector<string> tokenVec;
-		
+		vector<Token> tokenVec;
+		int currentTokenIndex = 0;
+
 		JackTokenizer(ifstream& source) {
 			string line;
 			bool multiLineCommentActive = false;
@@ -92,71 +121,91 @@ class JackTokenizer {
 						// Whitespace
 						if (isspace(firstChar)) {
 							line.erase(0, 1);
-							continue;
-						}
-
-						// Single line comment
-						if (firstTwoChars == "//") {
-							break;
 						}
 
 						// During or at the end of a multi line comment
-						if (multiLineCommentActive) {
+						else if (multiLineCommentActive) {
 							if (firstTwoChars == "*/") {
 								line.erase(0, 2);
 								multiLineCommentActive = false;
 							}
+						}
 
-							continue;
+						// Single line comment
+						else if (firstTwoChars == "//") {
+							break;
 						}
 
 						// Start of a multi line comment
-						if (firstTwoChars == "/*") {
+						else if (firstTwoChars == "/*") {
 							line.erase(0, 2);
 							multiLineCommentActive = true;
-							continue;
 						}
 
 						// Int
-						if (isdigit(firstChar)) {
+						else if (isdigit(firstChar)) {
 							// Ints range from 0 - 32767. Max amount of digits can be 5
 							for (int i = 1; i < 6; i++) {
 								if (!isdigit(line[i])) {
-									tokenVec.push_back(line.substr(0, i - 1));
-									line.erase(0, i - 1);
+									pushAndErase(line, "INT_CONST", i - 1);
 									break;
 								}
 
 								if (i > 5) {
-									throw ("Large int");
+									throw ("Large int: " + line);
 								}
 							}
-
-							continue;
 						}
 
 						// String
-						if (firstChar == '"') {
+						else if (firstChar == '"') {
 							int secondQuotationOccurrence = line.find_first_of(1, '"');
 
 							if (secondQuotationOccurrence == string::npos) {
-								throw ("String has no ending quotation");
+								throw ("String has no ending quotation: " + line);
 							}
 							
-							tokenVec.push_back(line.substr(0, secondQuotationOccurrence));
-							line.erase(0, secondQuotationOccurrence);
-
-							continue;
+							pushAndErase(line, "STRING_CONST", secondQuotationOccurrence);
 						}
 
 						// Symbol
-						if (symbols.find_first_of(firstChar) != string::npos) {
-							tokenVec.push_back(string(1, firstChar));
-							line.erase(0, 1);
-							continue;
+						else if (symbols.find_first_of(firstChar) != string::npos) {
+							pushAndErase(line, "SYMBOL", 1);
 						}
 
-						// Keywords
+						// Keywords and identifiers
+						else {
+							bool hasFoundKeyword = false;
+
+							// Keywords
+							for(auto &keyword : keywords) {
+								string kwa = keyword.first;
+								int len = kwa.length();
+
+								if (len <= line.length()) {
+									string kwb = line.substr(0, len);
+
+									// If the keyword is the same, indepedent of casing
+									if (equal(kwa.begin(), kwa.end(), kwb.begin(), kwb.end(), [](char a, char b) {
+										 return tolower(a) == tolower(b); 
+									})) {
+										hasFoundKeyword = true;
+										pushAndErase(line, "KEYWORD", len);
+									}
+								}
+							}
+
+							// Identifiers
+							if (!hasFoundKeyword) {
+								int symbolPos = line.find_first_of(symbols);
+								
+								if (symbolPos != string::npos) {
+									pushAndErase(line, "IDENTIFIER", symbolPos);
+								} else {
+									throw ("We got no idea how to translate this: " + line);
+								}
+							}
+						}
 					}
 				}
 			} catch (string errMsg) {
@@ -164,36 +213,25 @@ class JackTokenizer {
 			}
 		}
 
+		void pushAndErase(string &line, string type, int tokenLength) {
+			tokenVec.push_back({ line.substr(0, tokenLength), type });
+			line.erase(0, tokenLength);
+		}
+
 		bool hasMoreTokens() {
-			return false;
+			return currentTokenIndex < tokenVec.size() - 1;
 		}
 		
 		void advance() {
-			// 
+			currentTokenIndex++;
 		}
 
 		string tokenType() {
-			return "";
+			return tokenVec[currentTokenIndex].type;
 		}
 
-		string keyWord() {
-			return "";
-		}
-
-		char symbol() {
-			return 'A';
-		}
-
-		string identifier() {
-			return "";
-		}
-
-		int intVal() {
-			return 0;
-		}
-
-		string stringVal() {
-			return "";
+		string currentToken() {
+			return tokenVec[currentTokenIndex].token;
 		}
 };
 
