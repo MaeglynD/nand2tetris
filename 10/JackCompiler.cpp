@@ -10,7 +10,7 @@
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
-string symbols = "{}()[].,;+-*/&|<>=-";
+string symbols = "{}()[].,;+-*/&|<>=~";
 unordered_map<string, string> keywords = {
 	{ "class", "" },
 	{ "constructor", "" },
@@ -116,19 +116,25 @@ class JackTokenizer {
 				while(getline(source, line)) {
 					while (!line.empty()) {
 						char firstChar = line[0];
-						string firstTwoChars = line.substr(0, 2);
+						string firstTwoChars = line.substr(0, line.length() > 1 ? 2 : 1);
 
-						// Whitespace
-						if (isspace(firstChar)) {
-							line.erase(0, 1);
+						// Multi line comment
+						if (multiLineCommentActive) {
+							int pos = line.find("*/");
+
+							if (pos != string::npos) {
+								line.erase(0, pos + 3);
+								multiLineCommentActive = false;
+							} else {
+								// Go to next line
+								break;
+							}
 						}
 
-						// During or at the end of a multi line comment
-						else if (multiLineCommentActive) {
-							if (firstTwoChars == "*/") {
-								line.erase(0, 2);
-								multiLineCommentActive = false;
-							}
+						// Whitespace
+						else if (isspace(firstChar)) {
+							// TODO: positive lookahead remove further whitespace
+							line.erase(0, 1);
 						}
 
 						// Single line comment
@@ -147,7 +153,7 @@ class JackTokenizer {
 							// Ints range from 0 - 32767. Max amount of digits can be 5
 							for (int i = 1; i < 6; i++) {
 								if (!isdigit(line[i])) {
-									pushAndErase(line, "INT_CONST", i - 1);
+									pushAndErase(line, "INT_CONST", i);
 									break;
 								}
 
@@ -176,7 +182,7 @@ class JackTokenizer {
 						// Keywords and identifiers
 						else {
 							bool hasFoundKeyword = false;
-
+							
 							// Keywords
 							for(auto &keyword : keywords) {
 								string kwa = keyword.first;
@@ -187,10 +193,24 @@ class JackTokenizer {
 
 									// If the keyword is the same, indepedent of casing
 									if (equal(kwa.begin(), kwa.end(), kwb.begin(), kwb.end(), [](char a, char b) {
-										 return tolower(a) == tolower(b); 
+										return a == tolower(b); 
 									})) {
 										hasFoundKeyword = true;
 										pushAndErase(line, "KEYWORD", len);
+
+										// If the keyword is field, var or constructor the proceeding word
+										// will always be another keyword. This is particularlly useful
+										// for ensuring user-defined class names are recognized as keywords
+										if (kwa == "field" || kwa == "var" || kwa == "constructor") {
+											int pos = line.find_first_not_of(" \t\n\v\f\r");
+							
+											if (pos) {
+												line.erase(0, pos);
+												pushAndErase(line, "KEYWORD");
+											} else {
+												throw ("We expected a keyword, but couldn't find it: " + line);
+											}
+										}
 									}
 								}
 							}
@@ -198,7 +218,7 @@ class JackTokenizer {
 							// Identifiers
 							if (!hasFoundKeyword) {
 								int symbolPos = line.find_first_of(symbols);
-								
+
 								if (symbolPos != string::npos) {
 									pushAndErase(line, "IDENTIFIER", symbolPos);
 								} else {
@@ -211,10 +231,28 @@ class JackTokenizer {
 			} catch (string errMsg) {
 				cout << endl << "Tokenizer Error: " << errMsg;
 			}
+
+			for (auto &x : tokenVec) {
+				// if (x.type == "IDENTIFIER") {
+				// 	cout << endl << x.token << " "  << x.type << endl;
+				// }
+
+				cout << endl << x.token << " "  << x.type << endl;
+			}
 		}
 
-		void pushAndErase(string &line, string type, int tokenLength) {
-			tokenVec.push_back({ line.substr(0, tokenLength), type });
+		void pushAndErase(string &line, string type, int tokenLength = 100000) {
+			// In many cases we will simply extract the first word from the line
+			// using whitespace. We split the line on the lowest value of either tokenLength
+			// or the first found white space. Hence the optional tokenLength parameter
+			// being set defaulted to 100,000
+			unsigned int posOfWhiteSpace = line.find_first_of(" \t\n\v\f\r");
+			cout << (posOfWhiteSpace < tokenLength ) << endl;
+
+			// If trailing whitespace is included in tokenLength's bounds, remove them
+			string token = line.substr(0, (posOfWhiteSpace < tokenLength ? posOfWhiteSpace : tokenLength));
+
+			tokenVec.push_back({ token, type });
 			line.erase(0, tokenLength);
 		}
 
@@ -256,6 +294,9 @@ class JackAnalyzer {
 			ifstream jackFile(name + ".jack");
 
 			JackTokenizer tokenizer(jackFile);
+
+			xmlFile.close();
+			jackFile.close();
 		}
 };
 
