@@ -204,6 +204,7 @@ class JackTokenizer {
 										if (kwa == "field" || kwa == "var" || kwa == "constructor") {
 											int pos = line.find_first_not_of(" \t\n\v\f\r");
 							
+											// cout << endl << line << " " << pos << endl;
 											if (pos) {
 												line.erase(0, pos);
 												pushAndErase(line, "KEYWORD");
@@ -232,26 +233,24 @@ class JackTokenizer {
 				cout << endl << "Tokenizer Error: " << errMsg;
 			}
 
-			for (auto &x : tokenVec) {
-				// if (x.type == "IDENTIFIER") {
-				// 	cout << endl << x.token << " "  << x.type << endl;
-				// }
+			// For testing the tokenizer stream
+			// for (auto &x : tokenVec) {
+			// 	// if (x.type == "IDENTIFIER") {
+			// 	// 	cout << endl << x.token << " "  << x.type << endl;
+			// 	// }
 
-				cout << endl << x.token << " "  << x.type << endl;
-			}
+			// 	cout << endl << x.token << " "  << x.type << endl;
+			// }
 		}
 
-		void pushAndErase(string &line, string type, int tokenLength = 100000) {
-			// In many cases we will simply extract the first word from the line
-			// using whitespace. We split the line on the lowest value of either tokenLength
-			// or the first found white space. Hence the optional tokenLength parameter
-			// being set defaulted to 100,000
-			unsigned int posOfWhiteSpace = line.find_first_of(" \t\n\v\f\r");
-			cout << (posOfWhiteSpace < tokenLength ) << endl;
+		void pushAndErase(string &line, string type, int tokenLength = -1) {
+			// Often we simply want to split by whitespace. We ensure this by defining
+			// tokenLength as -1
+			if (tokenLength == -1) {
+				tokenLength = (unsigned int)line.find_first_of(" \t\n\v\f\r");
+			}
 
-			// If trailing whitespace is included in tokenLength's bounds, remove them
-			string token = line.substr(0, (posOfWhiteSpace < tokenLength ? posOfWhiteSpace : tokenLength));
-
+			string token = line.substr(0, tokenLength);
 			tokenVec.push_back({ token, type });
 			line.erase(0, tokenLength);
 		}
