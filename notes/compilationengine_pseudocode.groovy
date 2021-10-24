@@ -105,8 +105,27 @@ compileStatement(string currentToken) {
 			}
 
 			if (currentToken == 'return') {
+				advance();
 				
+				if (currentToken != ';') {
+					compileExpression();
+				}
 			}
+
+
 		}
 	</{currentToken}Statement>
 }
+
+compileExpression() {
+	if (currentToken == 'if', 'while') {
+		tokenToLookFor = ')'
+	} else {
+		tokenToLookFor = ';'
+	}
+
+	
+}
+
+
+
