@@ -40,67 +40,82 @@ struct Token {
 	string type;
 };
 
-class CompilitationEngine {
+class CompilationEngine {
+	public:
+		ofstream &xmlFile;
+		JackTokenizer &tokenizer;
 
-	CompilitationEngine() {
-		// 
-	}
+		CompilationEngine(ofstream &_xmlFile, JackTokenizer &_tokenizer) : xmlFile(_xmlFile), tokenizer(_tokenizer) {
+			compileClass();
+		}
 
-	void compileClass() {
-		// 
-	}
+		string getContentsRecursively () {
 
-	void compileClassVarDec() {
-		// 
-	}
+		}
 
-	void compileSubroutine(){ 
+		string wrapInTags (string tag, string innerText) {
+			return "<" + tag + ">" + innerText + "<" + tag + "/>";
+		}
 
-	}
+		void compileClass() {
+			xmlFile << wrapInTags("class", getContentsRecursively());
+		}
 
-	void compileParameterList() {
-		// 
-	}
+		void getContentsUntilSymbol() {
+			
+		}
 
-	void compileVarDev() {
-		// 
-	}
+		void compileClassVarDec() {
+			// 
+		}
 
-	void compileStatements() {
-		// 
-	}
+		void compileSubroutine(){ 
 
-	void compileDo() {
-		// 
-	}
+		}
 
-	void compileLet(){
-		// 
-	}
+		void compileParameterList() {
+			// 
+		}
 
-	void compileWhile() {
-		// 
-	}
+		void compileVarDec() {
+			// 
+		}
 
-	void compileReturn() {
-		// 
-	}
+		void compileStatements() {
+			// 
+		}
 
-	void compileIf() {
-		// 
-	}
+		void compileDo() {
+			// 
+		}
 
-	void compileExpression() {
-		// 
-	}
+		void compileLet(){
+			// 
+		}
 
-	void compileTerm() {
-		// 
-	}
+		void compileWhile() {
+			// 
+		}
 
-	void compileExpressionList() {
-		// 
-	}
+		void compileReturn() {
+			// 
+		}
+
+		void compileIf() {
+			// 
+		}
+
+		void compileExpression() {
+			// 
+		}
+
+		void compileTerm() {
+			// 
+		}
+
+		void compileExpressionList() {
+			// 
+		}
 };
 
 class JackTokenizer {
@@ -108,7 +123,7 @@ class JackTokenizer {
 		vector<Token> tokenVec;
 		int currentTokenIndex = 0;
 
-		JackTokenizer(ifstream& source) {
+		JackTokenizer(ifstream &source) {
 			string line;
 			bool multiLineCommentActive = false;
 			
@@ -204,7 +219,6 @@ class JackTokenizer {
 										if (kwa == "field" || kwa == "var" || kwa == "constructor") {
 											int pos = line.find_first_not_of(" \t\n\v\f\r");
 							
-											// cout << endl << line << " " << pos << endl;
 											if (pos) {
 												line.erase(0, pos);
 												pushAndErase(line, "KEYWORD");
@@ -293,6 +307,7 @@ class JackAnalyzer {
 			ifstream jackFile(name + ".jack");
 
 			JackTokenizer tokenizer(jackFile);
+			CompilationEngine compEngine(xmlFile, tokenizer);
 
 			xmlFile.close();
 			jackFile.close();
