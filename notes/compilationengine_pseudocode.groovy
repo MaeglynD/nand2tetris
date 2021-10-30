@@ -23,7 +23,7 @@ getContentsRecursively (bool stopAtEndBlock = false):
 	}
 
 	else if ('if', 'do', 'let', 'while', 'return') {
-		statements();
+		compileStatements();
 	}
 
 	..
@@ -63,9 +63,10 @@ varDec:
 		{ getContentsUntilSymbol(';') }
 	</varDec>
 
-
+// Invoked first then compileStatement invoked
 compileStatements:
 	if (currentToken == '}') {
+		<symbol> } </symbol>
 		advance();
 	} else {
 		if (current token is not 'if', ...) {
@@ -87,7 +88,7 @@ compileStatement(string currentToken) {
 		{
 			if (currentToken == 'if' || 'while') {
 				getContentsUntilSymbol('(');
-				compileExpression();
+				compileExpression(true);
 				getContentsUntilSymbol('{');
 				compileStatements();
 			}
@@ -105,11 +106,10 @@ compileStatement(string currentToken) {
 			}
 
 			if (currentToken == 'return') {
+				<keyword> return </keyword>;
 				advance();
 				
-				if (currentToken != ';') {
-					compileExpression();
-				}
+				compileExpression();
 			}
 
 
@@ -117,12 +117,25 @@ compileStatement(string currentToken) {
 	</{currentToken}Statement>
 }
 
-compileExpression() {
-	if (currentToken == 'if', 'while') {
-		tokenToLookFor = ')'
-	} else {
-		tokenToLookFor = ';'
+compileExpression(useBracketDepth) {
+	if (currentToken == ';') {
+		<symbol> ; </symbol>
+		advance();
+		return;
 	}
+
+	<expression>
+		if (useBracketDepth) {
+			depth = 0;
+			
+			while (!(currentToken == ')' && depth == 0)) {
+				if (currentToken == '')
+			}
+			// tokenToLookFor = ')'
+		} else {
+			getContentsUntilSymbol(';');
+		}
+	</expression>
 
 	
 }
