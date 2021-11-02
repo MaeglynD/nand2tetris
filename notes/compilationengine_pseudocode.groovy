@@ -129,7 +129,15 @@ compileExpression(useBracketDepth) {
 			depth = 0;
 			
 			while (!(currentToken == ')' && depth == 0)) {
-				if (currentToken == '')
+				{ here you would write the tag, as getContentsUntilSymbol does}
+				
+				if (currentToken == '(') {
+					depth++;
+				}
+
+				if (currentToken == ')') {
+					depth--;
+				}
 			}
 			// tokenToLookFor = ')'
 		} else {

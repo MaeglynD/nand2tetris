@@ -40,84 +40,6 @@ struct Token {
 	string type;
 };
 
-class CompilationEngine {
-	public:
-		ofstream &xmlFile;
-		JackTokenizer &tokenizer;
-
-		CompilationEngine(ofstream &_xmlFile, JackTokenizer &_tokenizer) : xmlFile(_xmlFile), tokenizer(_tokenizer) {
-			compileClass();
-		}
-
-		string getContentsRecursively () {
-
-		}
-
-		string wrapInTags (string tag, string innerText) {
-			return "<" + tag + ">" + innerText + "<" + tag + "/>";
-		}
-
-		void compileClass() {
-			xmlFile << wrapInTags("class", getContentsRecursively());
-		}
-
-		void getContentsUntilSymbol() {
-			
-		}
-
-		void compileClassVarDec() {
-			// 
-		}
-
-		void compileSubroutine(){ 
-
-		}
-
-		void compileParameterList() {
-			// 
-		}
-
-		void compileVarDec() {
-			// 
-		}
-
-		void compileStatements() {
-			// 
-		}
-
-		void compileDo() {
-			// 
-		}
-
-		void compileLet(){
-			// 
-		}
-
-		void compileWhile() {
-			// 
-		}
-
-		void compileReturn() {
-			// 
-		}
-
-		void compileIf() {
-			// 
-		}
-
-		void compileExpression() {
-			// 
-		}
-
-		void compileTerm() {
-			// 
-		}
-
-		void compileExpressionList() {
-			// 
-		}
-};
-
 class JackTokenizer {
 	public:
 		vector<Token> tokenVec;
@@ -212,27 +134,14 @@ class JackTokenizer {
 									})) {
 										hasFoundKeyword = true;
 										pushAndErase(line, "KEYWORD", len);
-
-										// If the keyword is field, var or constructor the proceeding word
-										// will always be another keyword. This is particularlly useful
-										// for ensuring user-defined class names are recognized as keywords
-										if (kwa == "field" || kwa == "var" || kwa == "constructor") {
-											int pos = line.find_first_not_of(" \t\n\v\f\r");
-							
-											if (pos) {
-												line.erase(0, pos);
-												pushAndErase(line, "KEYWORD");
-											} else {
-												throw ("We expected a keyword, but couldn't find it: " + line);
-											}
-										}
+										break;
 									}
 								}
 							}
 
 							// Identifiers
 							if (!hasFoundKeyword) {
-								int symbolPos = line.find_first_of(symbols);
+								int symbolPos = line.find_first_of(symbols + " ");
 
 								if (symbolPos != string::npos) {
 									pushAndErase(line, "IDENTIFIER", symbolPos);
@@ -246,15 +155,6 @@ class JackTokenizer {
 			} catch (string errMsg) {
 				cout << endl << "Tokenizer Error: " << errMsg;
 			}
-
-			// For testing the tokenizer stream
-			// for (auto &x : tokenVec) {
-			// 	// if (x.type == "IDENTIFIER") {
-			// 	// 	cout << endl << x.token << " "  << x.type << endl;
-			// 	// }
-
-			// 	cout << endl << x.token << " "  << x.type << endl;
-			// }
 		}
 
 		void pushAndErase(string &line, string type, int tokenLength = -1) {
@@ -286,6 +186,90 @@ class JackTokenizer {
 		}
 };
 
+class CompilationEngine {
+	public:
+		ofstream &xmlFile;
+		JackTokenizer &tokenizer;
+
+		CompilationEngine(ofstream &_xmlFile, JackTokenizer &_tokenizer) : xmlFile(_xmlFile), tokenizer(_tokenizer) {
+			// 
+		}
+
+		void testTokenizerOutput() {
+			for (auto &x : tokenizer.tokenVec) {
+				xmlFile << "\n<" + x.type + "> " + x.token + " </" + x.type + ">"; 
+			};
+		}
+
+		string getContentsRecursively () {
+			// 
+		}
+
+		string wrapInTags (string tag, string innerText) {
+			return "<" + tag + ">" + innerText + "<" + tag + "/>";
+		}
+
+		void compileClass() {
+		}
+
+		void getContentsUntilSymbol() {
+			
+		}
+
+		void compileClassVarDec() {
+			// 
+		}
+
+		void compileSubroutine(){ 
+
+		}
+
+		void compileParameterList() {
+			// 
+		}
+
+		void compileVarDec() {
+			// 
+		}
+
+		void compileStatements() {
+			// 
+		}
+
+		void compileDo() {
+			// 
+		}
+
+		void compileLet(){
+			// 
+		}
+
+		void compileWhile() {
+			// 
+		}
+
+		void compileReturn() {
+			// 
+		}
+
+		void compileIf() {
+			// 
+		}
+
+		void compileExpression() {
+			// 
+		}
+
+		void compileTerm() {
+			// 
+		}
+
+		void compileExpressionList() {
+			// 
+		}
+};
+
+
 class JackAnalyzer {
 	public:
 		JackAnalyzer(string userInput) {
@@ -303,7 +287,7 @@ class JackAnalyzer {
 		}
 
 		void analyze(string name) {
-			ofstream xmlFile(name + ".xml");
+			ofstream xmlFile(name + "T.xml");
 			ifstream jackFile(name + ".jack");
 
 			JackTokenizer tokenizer(jackFile);
