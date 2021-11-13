@@ -117,36 +117,57 @@ compileStatement(string currentToken) {
 	</{currentToken}Statement>
 }
 
-compileExpression(useBracketDepth) {
+compileExpression(stoppingToken) {
 	if (currentToken == ';') {
 		<symbol> ; </symbol>
 		advance();
 		return;
 	}
-
-	<expression>
-		if (useBracketDepth) {
-			depth = 0;
-			
-			while (!(currentToken == ')' && depth == 0)) {
-				{ here you would write the tag, as getContentsUntilSymbol does}
-				
-				if (currentToken == '(') {
-					depth++;
-				}
-
-				if (currentToken == ')') {
-					depth--;
-				}
-			}
-			// tokenToLookFor = ')'
-		} else {
-			getContentsUntilSymbol(';');
-		}
-	</expression>
-
 	
+	while (currentToken != stoppingToken) {
+
+	}
+
+	// <expression>
+		// if (tokenToDelimitate == ')') {
+		// 	depth = 0;
+		// 	failsafe = 0;
+			
+			// while (!(currentToken == ')' && depth == 0)) {
+			// 	{ here you would write the tag, as getContentsUntilSymbol does}
+				
+			// 	if (currentToken == '(') {
+			// 		depth++;
+			// 	}
+
+			// 	if (currentToken == ')') {
+			// 		depth--;
+			// 	}
+
+			// 	if (failsafe > 1000) {
+			// 		print "
+			// 		 compileExpression was broken prematurely as it reached the failsafe limit
+			// 		"
+			// 		break;
+			// 	}
+
+			// 	failsafe++
+			// }
+		// } else {
+		// 	getContentsUntilSymbol(tokenToDelimitate);
+		// }
+	// </expression>
 }
 
+compileExpressionList() {
+	<expressionList>
+		while (currentToken != ')') {
+			if (currentToken == ',') {
+				getContentsUntilSymbol(',');
+			}
+			compileExpression(',');
 
+		}
+	</expressionList>
+}
 
