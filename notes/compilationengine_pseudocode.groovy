@@ -124,9 +124,48 @@ compileExpression(stoppingToken) {
 		return;
 	}
 	
-	while (currentToken != stoppingToken) {
+	<expression>
+			<term>
 
-	}
+			while (currentToken != stoppingToken) {
+				compileTerm();
+			}
+
+			</term>
+		</expression>
+
+someFunction(fx(a, b), fy(2, 4))
+
+compileTerm() {
+	currentTokenReplica = currentToken;
+	advance();
+
+	<term>
+		// Could be identifier, keyword, string const, int const etc.
+		<{ currentTokenReplica.type }>
+			if (currentTokenReplica.type === 'identifier') {
+				if (currentToken == ';') {
+					// Do nothing
+				} else if (currentToken == '[') {
+					// Get whatever's inside the square brackets
+					compileExpression(']')
+				} else if (currentToken == '(' || '.') {
+					getContentsUntilSymbol('(');
+					compileExpression(')');
+				}
+				
+				{ currentToken }
+				advance();
+			}
+		</{ currentTokenReplica.type }>
+	</term>
+}
+	
+	let whatever = test;
+	 = test.testagain();
+	 = test[0]
+	 = test(test(test()));
+	
 
 	// <expression>
 		// if (tokenToDelimitate == ')') {
