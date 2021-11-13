@@ -133,8 +133,7 @@ compileExpression(stoppingToken) {
 
 			</term>
 		</expression>
-
-someFunction(fx(a, b), fy(2, 4))
+}
 
 compileTerm() {
 	previousToken = currentToken;
@@ -149,58 +148,20 @@ compileTerm() {
 		getContentsUntilSymbol(currentToken);
 
 		if (previousToken.type === 'identifier') {
+			if (currentToken == '.') {
+				getContentsUntilSymbol('(');
+				compileExpressionList(')');
+			}
+
 			if (currentToken == '[') {
 				compileExpression(']')
-			} else if (currentToken == '(' || '.') {
-				compileExpression(')');
+			} else if (currentToken == '(') {
+				compileExpressionList(')');
 			}
 			getContentsUntilSymbol(currentToken);
 		}
 			
 	</term>
-}
-	
-	let whatever = test;
-	 = test.testagain();
-	 = test[0]
-	 = test(test(test()));
-
-	 <term>
-		<identifier>
-			test
-		</identifier>
-	 </term>
-	
-
-	// <expression>
-		// if (tokenToDelimitate == ')') {
-		// 	depth = 0;
-		// 	failsafe = 0;
-			
-			// while (!(currentToken == ')' && depth == 0)) {
-			// 	{ here you would write the tag, as getContentsUntilSymbol does}
-				
-			// 	if (currentToken == '(') {
-			// 		depth++;
-			// 	}
-
-			// 	if (currentToken == ')') {
-			// 		depth--;
-			// 	}
-
-			// 	if (failsafe > 1000) {
-			// 		print "
-			// 		 compileExpression was broken prematurely as it reached the failsafe limit
-			// 		"
-			// 		break;
-			// 	}
-
-			// 	failsafe++
-			// }
-		// } else {
-		// 	getContentsUntilSymbol(tokenToDelimitate);
-		// }
-	// </expression>
 }
 
 compileExpressionList() {
