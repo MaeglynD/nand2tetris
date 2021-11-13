@@ -137,27 +137,26 @@ compileExpression(stoppingToken) {
 someFunction(fx(a, b), fy(2, 4))
 
 compileTerm() {
-	currentTokenReplica = currentToken;
+	previousToken = currentToken;
 	advance();
 
 	<term>
 		// Could be identifier, keyword, string const, int const etc.
-		<{ currentTokenReplica.type }>
-			if (currentTokenReplica.type === 'identifier') {
-				if (currentToken == ';') {
-					// Do nothing
-				} else if (currentToken == '[') {
-					// Get whatever's inside the square brackets
-					compileExpression(']')
-				} else if (currentToken == '(' || '.') {
-					getContentsUntilSymbol('(');
-					compileExpression(')');
-				}
-				
-				{ currentToken }
-				advance();
+		if (currentToken.type != 'symbol') {
+			throw err 'We expected a symbol here.'
+		}
+
+		getContentsUntilSymbol(currentToken);
+
+		if (previousToken.type === 'identifier') {
+			if (currentToken == '[') {
+				compileExpression(']')
+			} else if (currentToken == '(' || '.') {
+				compileExpression(')');
 			}
-		</{ currentTokenReplica.type }>
+			getContentsUntilSymbol(currentToken);
+		}
+			
 	</term>
 }
 	
@@ -165,6 +164,12 @@ compileTerm() {
 	 = test.testagain();
 	 = test[0]
 	 = test(test(test()));
+
+	 <term>
+		<identifier>
+			test
+		</identifier>
+	 </term>
 	
 
 	// <expression>
