@@ -331,9 +331,11 @@ class CompilationEngine {
 				wrapAndAdvanceCurrentToken(contents);
 			} else {
 				while (!isCurrentToken(stoppingToken)) {
-					// 
+					contents += compileTerm();
 				}
 			}
+
+			return contents;
 		}
 
 		string compileDo() {
@@ -357,7 +359,9 @@ class CompilationEngine {
 		}
 
 		string compileTerm() {
-			// 
+			string prevToken = tokenizer.currentToken();
+
+			tokenizer.advance();
 		}
 
 		string compileExpressionList() {

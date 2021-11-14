@@ -45,7 +45,7 @@ subroutine:
 		{ compileParamaterList() }
 		{ getContentsUntilSymbol('{') }
 		<subroutineBody>
-			{ getContentsRecursively(true) }
+			{ compileStatements() }
 		</subroutineBody>
 	</subroutine>
 
@@ -123,14 +123,10 @@ compileExpression(stoppingToken) {
 	}
 	
 	<expression>
-			<term>
-
-			while (currentToken != stoppingToken) {
-				compileTerm();
-			}
-
-			</term>
-		</expression>
+		while (currentToken != stoppingToken) {
+			compileTerm();
+		}
+	</expression>
 }
 
 compileTerm() {
