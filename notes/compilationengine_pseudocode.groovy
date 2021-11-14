@@ -16,8 +16,6 @@ getContentsRecursively (bool stopAtEndBlock = false):
 		subroutine();
 	}
 	
-	// paramaterList not included
-
 	else if ('var') {
 		varDec();
 	}
@@ -176,3 +174,9 @@ compileExpressionList() {
 	</expressionList>
 }
 
+compileClass() {
+	<class>
+		 getContentsUntilSymbol('{');
+		 getContentsRecursively(true);
+	</class>
+}

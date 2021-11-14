@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 #include <experimental/filesystem>
 #include <regex>
@@ -177,7 +178,7 @@ class JackTokenizer {
 			currentTokenIndex++;
 		}
 
-		string tokenType() {
+		string currentType() {
 			return tokenVec[currentTokenIndex].type;
 		}
 
@@ -192,7 +193,7 @@ class CompilationEngine {
 		JackTokenizer &tokenizer;
 
 		CompilationEngine(ofstream &_xmlFile, JackTokenizer &_tokenizer) : xmlFile(_xmlFile), tokenizer(_tokenizer) {
-			// 
+			compileClass();
 		}
 
 		void testTokenizerOutput() {
@@ -201,70 +202,165 @@ class CompilationEngine {
 			};
 		}
 
-		string getContentsRecursively () {
-			// 
+		string getContentsRecursively(bool stopAtEndOfBlock = false) {
+			string contents;
+
+			if (stopAtEndOfBlock && tokenizer.currentToken() == "}") {
+				return;
+			}
+
+			if (isCurrentToken("field")) {
+				contents += compileClassVarDec();
+			}
+
+			if (isCurrentToken({ "method", "function", "constructor" })) {
+				contents += compileSubroutine();
+			}
+
+			if (isCurrentToken("var")) {
+				contents += compileVarDec();
+			}
+
+			if (isCurrentToken({ "if", "do", "let", "while", "return" })) {
+				contents += compileStatements();
+			}
+
+			tokenizer.advance();
+
+			return tokenizer.hasMoreTokens() ? getContentsRecursively(stopAtEndOfBlock) : contents;
+		}
+
+		bool isCurrentToken(unordered_set<string> stringsToCompare) {
+			return stringsToCompare.find(tokenizer.currentToken()) != stringsToCompare.end();
+		}
+
+		bool isCurrentToken(string stringToCompare) {
+			return tokenizer.currentToken() == stringToCompare;
 		}
 
 		string wrapInTags (string tag, string innerText) {
-			return "<" + tag + ">" + innerText + "<" + tag + "/>";
+			return "<" + tag + ">\n" + innerText + "\n</" + tag + ">";
 		}
 
 		void compileClass() {
+			xmlFile << wrapInTags("class", getContentsUntilSymbol("{") + getContentsRecursively(true));
 		}
 
-		void getContentsUntilSymbol() {
+		string wrapAndAdvanceCurrentToken(string &contents) {
+			contents += wrapInTags(tokenizer.currentType(), tokenizer.currentToken());
+			tokenizer.advance();
 			
+			return contents;
 		}
 
-		void compileClassVarDec() {
+		string getContentsUntilSymbol(string symbol) {
+			string contents;
+			int failsafe = 0;
+
+			while (!isCurrentToken(symbol)) {
+				wrapAndAdvanceCurrentToken(contents);
+				failsafe++;
+
+				if (failsafe > 1000) {
+					throw ("An overflow occured during the 'getContentsUntilSymbol' routine");
+				}
+			}
+
+			wrapAndAdvanceCurrentToken(contents);
+
+			return contents;
+		}
+
+		string compileClassVarDec() {
+			return wrapInTags("classVarDec", getContentsUntilSymbol(";"));
+		}
+
+		string compileSubroutine(){
+			return wrapInTags(
+				"subroutine", 
+				getContentsUntilSymbol("(")
+					+ compileParameterList() 
+					+ getContentsUntilSymbol("{") 
+					+ wrapInTags("subroutineBody", getContentsRecursively(true))
+			);
+		}
+
+		string compileParameterList() {
+			return wrapInTags("parameterList", getContentsUntilSymbol(")"));
+		}
+
+		string compileVarDec() {
+			return wrapInTags("varDec", getContentsUntilSymbol(";"));
+		}
+
+		string compileStatements() {
+			string contents; 
+			unordered_set<string> conditions = { "if", "do", "let", "while", "return" };
+
+			if (isCurrentToken("}")) {
+				wrapAndAdvanceCurrentToken(contents);
+			} else {
+				if (!isCurrentToken(conditions)) {
+					throw ("An error occured in compileStatements routine: routine called without keyword being a statement");
+				}
+					
+				while (isCurrentToken(conditions)) {
+					contents += compileStatement();
+				}
+			}
+
+			return wrapInTags("statements", contents);
+		}
+
+		string compileStatement(){
+			string contents;
+
+			if (isCurrentToken({ "if", "while" })) {
+				getContentsUntilSymbol("(");
+				compileExpression();
+			}
+
+			return wrapInTags(tokenizer.currentToken() + "Statement", contents);
+		}
+
+		
+		string compileExpression(string stoppingToken) {
+			string contents;
+
+			if (isCurrentToken(";")) {
+				wrapAndAdvanceCurrentToken(contents);
+			} else {
+				while (!isCurrentToken(stoppingToken)) {
+					// 
+				}
+			}
+		}
+
+		string compileDo() {
 			// 
 		}
 
-		void compileSubroutine(){ 
-
-		}
-
-		void compileParameterList() {
+		string compileLet(){
 			// 
 		}
 
-		void compileVarDec() {
+		string compileWhile() {
 			// 
 		}
 
-		void compileStatements() {
+		string compileReturn() {
 			// 
 		}
 
-		void compileDo() {
+		string compileIf() {
 			// 
 		}
 
-		void compileLet(){
+		string compileTerm() {
 			// 
 		}
 
-		void compileWhile() {
-			// 
-		}
-
-		void compileReturn() {
-			// 
-		}
-
-		void compileIf() {
-			// 
-		}
-
-		void compileExpression() {
-			// 
-		}
-
-		void compileTerm() {
-			// 
-		}
-
-		void compileExpressionList() {
+		string compileExpressionList() {
 			// 
 		}
 };
