@@ -257,6 +257,7 @@ class CompilationEngine {
 			string contents;
 			int failsafe = 0;
 
+			// Include all tokens Up until the current token...
 			while (!isCurrentToken(symbol)) {
 				wrapAndAdvanceCurrentToken(contents);
 				failsafe++;
@@ -266,6 +267,7 @@ class CompilationEngine {
 				}
 			}
 
+			// And include the token itself
 			wrapAndAdvanceCurrentToken(contents);
 
 			return contents;
@@ -315,57 +317,118 @@ class CompilationEngine {
 		string compileStatement(){
 			string contents;
 
-			if (isCurrentToken({ "if", "while" })) {
-				getContentsUntilSymbol("(");
-				compileExpression();
+			if (isCurrentToken(unordered_set<string>({ "if", "while" }))) {
+				contents = getContentsUntilSymbol("(")
+					+ compileExpression()
+					+ getContentsUntilSymbol("{")
+					+ compileStatements();
 			}
+
+			else if (isCurrentToken("let")) {
+				contents = gcusAndAccountForExpressions("=")
+					+ compileExpression();
+			}
+
+			else if (isCurrentToken("do")) {
+				contents = getContentsUntilSymbol("(")
+					+ compileExpressionList();
+			}
+
+			if (isCurrentToken("return")) {
+				wrapAndAdvanceCurrentToken(contents);
+				contents += compileExpression();
+			}
+
 
 			return wrapInTags(tokenizer.currentToken() + "Statement", contents);
 		}
 
 		
-		string compileExpression(string stoppingToken) {
+		string compileExpression(unordered_set<string> stoppingTokens = { ";" }, bool shouldIncludeStopper = true) {
 			string contents;
 
 			if (isCurrentToken(";")) {
 				wrapAndAdvanceCurrentToken(contents);
 			} else {
-				while (!isCurrentToken(stoppingToken)) {
+				while (!isCurrentToken(stoppingTokens)) {
 					contents += compileTerm();
+				}
+
+				contents = wrapInTags("expression", contents);
+
+				if (shouldIncludeStopper) {
+					wrapAndAdvanceCurrentToken(contents);
 				}
 			}
 
 			return contents;
 		}
 
-		string compileDo() {
-			// 
-		}
+		string gcusAndAccountForExpressions(string stoppingToken) {
+			string contents;
 
-		string compileLet(){
-			// 
-		}
+			while (!isCurrentToken(stoppingToken)) {
+				if (isCurrentToken("(")) {
+					contents += compileExpression({ ")" });
+				} 
+				
+				else if (isCurrentToken("[")) {
+					contents += compileExpression({ "]" });
+				} 
+				
+				else {
+					wrapAndAdvanceCurrentToken(contents);
+				}
+			}
 
-		string compileWhile() {
-			// 
-		}
-
-		string compileReturn() {
-			// 
-		}
-
-		string compileIf() {
-			// 
+			return contents;
 		}
 
 		string compileTerm() {
+			string contents;
 			string prevToken = tokenizer.currentToken();
+			string prevType = tokenizer.currentType();
 
 			tokenizer.advance();
+
+			if (prevType == "IDENTIFIER") {
+				if (isCurrentToken(".")) {
+					contents = getContentsUntilSymbol("(") + compileExpressionList();
+				} 
+
+				else if (isCurrentToken("[")) {
+					contents = compileExpression({ "]" });
+				}
+
+				else if (isCurrentToken("(")) {
+					contents = compileExpression({ ")" });
+				}
+
+				else {
+					wrapAndAdvanceCurrentToken(contents);
+				}
+			} else {
+				wrapAndAdvanceCurrentToken(contents);
+			}
+
+			return wrapInTags("term", contents);
 		}
 
 		string compileExpressionList() {
-			// 
+			string contents;
+
+			while (!isCurrentToken(")")) {
+				if (isCurrentToken(",")) {
+					wrapAndAdvanceCurrentToken(contents);
+				} else {
+					contents += compileExpression({ ",", ")" }, false);
+				}
+			}
+
+			contents = wrapInTags("expressionList", contents);
+			wrapAndAdvanceCurrentToken(contents);
+
+			return contents;
 		}
 };
 

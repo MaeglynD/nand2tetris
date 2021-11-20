@@ -80,34 +80,41 @@ compileStatements:
 		</statements>
 	}
 
+gcusAndRecurExpression(stoppingToken) {
+	while (currentToken != stoppingToken) {
+		if (currentToken is "(" or "[") {
+			compileExpression(")" or "]");
+		} else {
+			wrapAndAdvanceCurrentToken();
+		}
+	}
+}
 	
 compileStatement(string currentToken) {
 	<{currentToken}Statement>
 		{
 			if (currentToken == 'if' || 'while') {
 				getContentsUntilSymbol('(');
-				compileExpression(true);
+				compileExpression(')');
 				getContentsUntilSymbol('{');
 				compileStatements();
 			}
 
 			if (currentToken == 'let') {
-				getContentsUntilSymbol('=');
-				compileExpression();
-				getContentsUntilSymbol(';');
+				gcusAndRecurExpressions("=");
+				compileExpression(';');
 			}
 
 			if (currentToken == 'do') {
 				getContentsUntilSymbol('(');
 				compileExpressionList();
-				getContentsUntilSymbol(';');
 			}
 
 			if (currentToken == 'return') {
 				<keyword> return </keyword>;
 				advance();
 				
-				compileExpression();
+				compileExpression(";");
 			}
 
 
@@ -115,7 +122,8 @@ compileStatement(string currentToken) {
 	</{currentToken}Statement>
 }
 
-compileExpression(stoppingToken) {
+compileExpression(stoppingToken, shouldIncludeStopper) {
+	// For the things like 'return;'
 	if (currentToken == ';') {
 		<symbol> ; </symbol>
 		advance();
@@ -134,29 +142,35 @@ compileTerm() {
 	advance();
 
 	<term>
-		// Could be identifier, keyword, string const, int const etc.
-		if (currentToken.type != 'symbol') {
-			throw err 'We expected a symbol here.'
-		}
-
-		getContentsUntilSymbol(currentToken);
-
 		if (previousToken.type === 'identifier') {
 			if (currentToken == '.') {
 				getContentsUntilSymbol('(');
-				compileExpressionList(')');
+				compileExpressionList();
 			}
-
-			if (currentToken == '[') {
+			
+			 else if (currentToken == '[') {
 				compileExpression(']')
-			} else if (currentToken == '(') {
-				compileExpressionList(')');
 			}
-			getContentsUntilSymbol(currentToken);
+			
+			 else if (currentToken == '(') {
+				compileExpression(')');
+			} else {
+				wrapAndAdvanceCurrentToken();
+			}
+		} else {
+			wrapAndAdvanceCurrentToken();
 		}
 			
 	</term>
 }
+
+let test = { term }
+				 = 32 + someVariableName;
+				 = someArrayName[32];
+				 = someArrayName[someArrayNameTwo[2] + someVariableName];
+
+testFunction({ term }, {})
+
 
 compileExpressionList() {
 	<expressionList>
@@ -164,9 +178,10 @@ compileExpressionList() {
 			if (currentToken == ',') {
 				getContentsUntilSymbol(',');
 			}
-			compileExpression(',');
-
+			compileExpression(',' || ')', false);
 		}
+
+		wrapAndAdvanceCurrentToken();
 	</expressionList>
 }
 
