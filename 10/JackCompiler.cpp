@@ -194,6 +194,13 @@ class CompilationEngine {
 
 		CompilationEngine(ofstream &_xmlFile, JackTokenizer &_tokenizer) : xmlFile(_xmlFile), tokenizer(_tokenizer) {
 			compileClass();
+
+			cout << "\n You're XML file is now ready. Enjoy \n";
+		}
+
+		void compileClass() {
+			xmlFile << wrapInTags("class", getContentsUntilSymbol("{") + getContentsRecursively(true));
+			xmlFile.close();
 		}
 
 		void testTokenizerOutput() {
@@ -240,10 +247,6 @@ class CompilationEngine {
 
 		string wrapInTags (string tag, string innerText) {
 			return "<" + tag + ">\n" + innerText + "\n</" + tag + ">";
-		}
-
-		void compileClass() {
-			xmlFile << wrapInTags("class", getContentsUntilSymbol("{") + getContentsRecursively(true));
 		}
 
 		string wrapAndAdvanceCurrentToken(string &contents) {
