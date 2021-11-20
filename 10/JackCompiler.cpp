@@ -213,7 +213,7 @@ class CompilationEngine {
 			string contents;
 
 			if (stopAtEndOfBlock && tokenizer.currentToken() == "}") {
-				return;
+				return contents;
 			}
 
 			if (isCurrentToken("field")) {
