@@ -91,7 +91,7 @@ class JackTokenizer {
 							// Ints range from 0 - 32767. Max amount of digits can be 5
 							for (int i = 1; i < 6; i++) {
 								if (!isdigit(line[i])) {
-									pushAndErase(line, "INT_CONST", i);
+									pushAndErase(line, "integerConstant", i);
 									break;
 								}
 
@@ -109,12 +109,12 @@ class JackTokenizer {
 								throw ("String has no ending quotation: " + line);
 							}
 							
-							pushAndErase(line, "STRING_CONST", secondQuotationOccurrence);
+							pushAndErase(line, "stringConstant", secondQuotationOccurrence);
 						}
 
 						// Symbol
 						else if (symbols.find_first_of(firstChar) != string::npos) {
-							pushAndErase(line, "SYMBOL", 1);
+							pushAndErase(line, "symbol", 1);
 						}
 
 						// Keywords and identifiers
@@ -135,9 +135,10 @@ class JackTokenizer {
 									// If the keyword is the same, indepedent of casing and if the subsequent character is a symbol
 									// or a space. This accounts for cases such as var thisIsAVarName = ...; in which 'this' would
 									// be extracted as its a keyword
-									if (isWordPresent && (symbols + " ").find_first_of(kwa[len]) != string::npos) {
+									if (isWordPresent && (symbols + " ").find_first_of(line[len]) != string::npos) {
 										hasFoundKeyword = true;
-										pushAndErase(line, "KEYWORD", len);
+										pushAndErase(line, "keyword", len);
+										
 										break;
 									}
 								}
@@ -148,7 +149,7 @@ class JackTokenizer {
 								int symbolPos = line.find_first_of(symbols + " ");
 
 								if (symbolPos != string::npos) {
-									pushAndErase(line, "IDENTIFIER", symbolPos);
+									pushAndErase(line, "identifier", symbolPos);
 								} else {
 									throw ("We got no idea how to translate this: " + line);
 								}
@@ -178,7 +179,7 @@ class JackTokenizer {
 				token = "&gt;";
 			}
 
-			if (type == "STRING_CONST") {
+			if (type == "stringConstant") {
 				token = token.substr(1, token.size() - 2);
 			}
 
@@ -210,20 +211,26 @@ class CompilationEngine {
 
 		CompilationEngine(ofstream &_xmlFile, JackTokenizer &_tokenizer) : xmlFile(_xmlFile), tokenizer(_tokenizer) {
 			try {
-				compileClass();
-
-				cout << "\n You're XML file is now ready. Enjoy \n";
+				compileClass(false);
 			} catch (const char* errMsg) {
 				cout << endl << errMsg;
 			}
 		}
 
-		void compileClass() {
-			xmlFile << wrapInTags("class", getContentsUntilSymbol("{").append(getContents()));
+		void compileClass(bool printXML) {
+			string contents = wrapInTags("class", getContentsUntilSymbol("{").append(getContents()));
+
+			xmlFile << contents;
 			xmlFile.close();
+
+			if (printXML) {
+				cout << contents;
+			}
+
+			cout << "\n You're XML file is now ready. Enjoy \n";
 		}
 
-		string getContentsUntilSymbol(string symbol) {
+		string getContentsUntilSymbol(string symbol, bool shouldIncludeStopper = true) {
 			string contents;
 			int failsafe = 0;
 
@@ -237,8 +244,9 @@ class CompilationEngine {
 				}
 			}
 
-			// And include the token itself
-			wrapAndAdvanceCurrentToken(contents);
+			if (shouldIncludeStopper) {
+				wrapAndAdvanceCurrentToken(contents);
+			}
 
 			return contents;
 		}
@@ -252,8 +260,13 @@ class CompilationEngine {
 		string getContents() {
 			string contents;
 
-			while (tokenizer.hasMoreTokens() && !isCurrentToken("}")) {
-				if (isCurrentToken("field")) {
+			while (tokenizer.hasMoreTokens()) {
+				if (isCurrentToken("}")) {
+					wrapAndAdvanceCurrentToken(contents);
+					break;
+				}
+
+				else if (isCurrentToken("field")) {
 					contents += compileClassVarDec();
 				}
 
@@ -288,7 +301,7 @@ class CompilationEngine {
 		string wrapInTags (string tag, string innerText) {
 			string possibleLineBreak = (innerText.size() > 0 && innerText[0] == '<') ? "\n" : "";
 
-			return "<" + tag + ">" + possibleLineBreak + innerText + "</" + tag + ">\n";
+			return "<" + tag + "> " + possibleLineBreak + innerText + " </" + tag + ">\n";
 		}
 
 		string wrapAndAdvanceCurrentToken(string &contents) {
@@ -303,17 +316,18 @@ class CompilationEngine {
 		}
 
 		string compileSubroutine(){
-			return wrapInTags(
-				"subroutineDec", 
-				getContentsUntilSymbol("(")
-					.append(compileParameterList())
-					.append(getContentsUntilSymbol("{"))
-					.append(wrapInTags("subroutineBody", getContents()))
-			);
+			string contents = getContentsUntilSymbol("(")
+				.append(compileParameterList())
+				.append(getContentsUntilSymbol(")"))
+				.append(
+					wrapInTags("subroutineBody", getContentsUntilSymbol("{").append(getContents()))
+				);
+
+				return wrapInTags("subroutineDec", contents);
 		}
 
 		string compileParameterList() {
-			return wrapInTags("parameterList", getContentsUntilSymbol(")"));
+			return wrapInTags("parameterList", getContentsUntilSymbol(")", false));
 		}
 
 		string compileVarDec() {
@@ -325,25 +339,35 @@ class CompilationEngine {
 			int failsafe = 0;
 			unordered_set<string> conditions = { "if", "do", "let", "while", "return" };
 
+			// If theres no statements within the block
 			if (isCurrentToken("}")) {
 				wrapAndAdvanceCurrentToken(contents);
-			} else {
-				if (!isCurrentToken(conditions)) {
-					throw ("An error occured in compileStatements routine: routine called without keyword being a statement");
-				}
-					
-				while (isCurrentToken(conditions)) {
-					contents += compileStatement();
+				return contents;
+			}
 
-					failsafe++;
-					
-					if (failsafe > 1000) {
-						throw ("An overflow occured during the compileStatements routine.");
-					}
+			if (!isCurrentToken(conditions)) {
+				throw ("An error occured in compileStatements routine: routine called without keyword being a statement");
+			}
+				
+			while (isCurrentToken(conditions)) {
+				bool shouldIncludeEndBlock = isCurrentToken(unordered_set<string>({ "if", "while" }));
+
+				contents += compileStatement();
+
+				if (shouldIncludeEndBlock) {
+					wrapAndAdvanceCurrentToken(contents);
+				}
+
+				failsafe++;
+				
+				if (failsafe > 1000) {
+					throw ("An overflow occured during the compileStatements routine.");
 				}
 			}
 
-			return wrapInTags("statements", contents);
+			contents = wrapInTags("statements", contents);
+
+			return contents;
 		}
 
 		string compileStatement(){
@@ -358,13 +382,14 @@ class CompilationEngine {
 			}
 
 			else if (isCurrentToken("let")) {
-				contents = gcusAndAccountForExpressions({ "=" })
+				contents = gcusAndAccountForExpressions({ "=" }, true)
 					.append(compileExpression());
 			}
 
 			else if (isCurrentToken("do")) {
 				contents = getContentsUntilSymbol("(")
-					.append(compileExpressionList());
+					.append(compileExpressionList()) 
+					.append(getContentsUntilSymbol(";"));
 			}
 
 			else if (isCurrentToken("return")) {
@@ -376,7 +401,6 @@ class CompilationEngine {
 				throw ("compileStatement was called but no statement was parsed");
 			}
 
-
 			return wrapInTags(activeStatement + "Statement", contents);
 		}
 
@@ -387,10 +411,7 @@ class CompilationEngine {
 			if (isCurrentToken(";")) {
 				wrapAndAdvanceCurrentToken(contents);
 			} else {
-				while (!isCurrentToken(stoppingTokens)) {
-					contents += compileTerm(stoppingTokens);
-				}
-
+				contents = compileTerm(stoppingTokens);
 				contents = wrapInTags("expression", contents);
 
 				if (shouldIncludeStopper) {
@@ -401,26 +422,30 @@ class CompilationEngine {
 			return contents;
 		}
 
-		string gcusAndAccountForExpressions(unordered_set<string> stoppingTokens) {
+		string gcusAndAccountForExpressions(unordered_set<string> stoppingTokens, bool shouldIncludeStopper = false) {
 			string contents;
 
 			while (!isCurrentToken(stoppingTokens)) {
-				if (isCurrentToken("(")) {
+				string prevToken = tokenizer.currentToken();
+
+				wrapAndAdvanceCurrentToken(contents);
+
+				if (prevToken == "(") {
 					contents += compileExpression({ ")" });
 				} 
 				
-				else if (isCurrentToken("[")) {
+				else if (prevToken == "[") {
 					contents += compileExpression({ "]" });
 				} 
 
-				else if (isCurrentToken(".")) {
+				else if (prevToken == ".") {
 					contents += getContentsUntilSymbol("(") 
 						.append(compileExpressionList());
 				}
-				
-				else {
-					wrapAndAdvanceCurrentToken(contents);
-				}
+			}
+
+			if (shouldIncludeStopper) {
+				wrapAndAdvanceCurrentToken(contents);
 			}
 
 			return contents;
