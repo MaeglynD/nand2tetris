@@ -126,13 +126,16 @@ class JackTokenizer {
 								string kwa = keyword.first;
 								int len = kwa.length();
 
-								if (len <= line.length()) {
+								if (len <= line.length() + 1) {
 									string kwb = line.substr(0, len);
-
-									// If the keyword is the same, indepedent of casing
-									if (equal(kwa.begin(), kwa.end(), kwb.begin(), kwb.end(), [](char a, char b) {
+									bool isWordPresent = equal(kwa.begin(), kwa.end(), kwb.begin(), kwb.end(), [](char a, char b) {
 										return a == tolower(b); 
-									})) {
+									});
+
+									// If the keyword is the same, indepedent of casing and if the subsequent character is a symbol
+									// or a space. This accounts for cases such as var thisIsAVarName = ...; in which 'this' would
+									// be extracted as its a keyword
+									if (isWordPresent && (symbols + " ").find_first_of(kwa[len]) != string::npos) {
 										hasFoundKeyword = true;
 										pushAndErase(line, "KEYWORD", len);
 										break;
@@ -153,7 +156,7 @@ class JackTokenizer {
 						}
 					}
 				}
-			} catch (string errMsg) {
+			} catch (const char* errMsg) {
 				cout << endl << "Tokenizer Error: " << errMsg;
 			}
 		}
@@ -166,6 +169,19 @@ class JackTokenizer {
 			}
 
 			string token = line.substr(0, tokenLength);
+
+			if (token == "<") {
+				token = "&lt;";
+			}
+			
+			if (token == ">") {
+				token = "&gt;";
+			}
+
+			if (type == "STRING_CONST") {
+				token = token.substr(1, token.size() - 2);
+			}
+
 			tokenVec.push_back({ token, type });
 			line.erase(0, tokenLength);
 		}
@@ -193,67 +209,18 @@ class CompilationEngine {
 		JackTokenizer &tokenizer;
 
 		CompilationEngine(ofstream &_xmlFile, JackTokenizer &_tokenizer) : xmlFile(_xmlFile), tokenizer(_tokenizer) {
-			compileClass();
+			try {
+				compileClass();
 
-			cout << "\n You're XML file is now ready. Enjoy \n";
+				cout << "\n You're XML file is now ready. Enjoy \n";
+			} catch (const char* errMsg) {
+				cout << endl << errMsg;
+			}
 		}
 
 		void compileClass() {
-			xmlFile << wrapInTags("class", getContentsUntilSymbol("{") + getContentsRecursively(true));
+			xmlFile << wrapInTags("class", getContentsUntilSymbol("{").append(getContents()));
 			xmlFile.close();
-		}
-
-		void testTokenizerOutput() {
-			for (auto &x : tokenizer.tokenVec) {
-				xmlFile << "\n<" + x.type + "> " + x.token + " </" + x.type + ">"; 
-			};
-		}
-
-		string getContentsRecursively(bool stopAtEndOfBlock = false) {
-			string contents;
-
-			if (stopAtEndOfBlock && tokenizer.currentToken() == "}") {
-				return contents;
-			}
-
-			if (isCurrentToken("field")) {
-				contents += compileClassVarDec();
-			}
-
-			if (isCurrentToken({ "method", "function", "constructor" })) {
-				contents += compileSubroutine();
-			}
-
-			if (isCurrentToken("var")) {
-				contents += compileVarDec();
-			}
-
-			if (isCurrentToken({ "if", "do", "let", "while", "return" })) {
-				contents += compileStatements();
-			}
-
-			tokenizer.advance();
-
-			return tokenizer.hasMoreTokens() ? getContentsRecursively(stopAtEndOfBlock) : contents;
-		}
-
-		bool isCurrentToken(unordered_set<string> stringsToCompare) {
-			return stringsToCompare.find(tokenizer.currentToken()) != stringsToCompare.end();
-		}
-
-		bool isCurrentToken(string stringToCompare) {
-			return tokenizer.currentToken() == stringToCompare;
-		}
-
-		string wrapInTags (string tag, string innerText) {
-			return "<" + tag + ">\n" + innerText + "\n</" + tag + ">";
-		}
-
-		string wrapAndAdvanceCurrentToken(string &contents) {
-			contents += wrapInTags(tokenizer.currentType(), tokenizer.currentToken());
-			tokenizer.advance();
-			
-			return contents;
 		}
 
 		string getContentsUntilSymbol(string symbol) {
@@ -276,17 +243,72 @@ class CompilationEngine {
 			return contents;
 		}
 
+		void testTokenizerOutput() {
+			for (auto &x : tokenizer.tokenVec) {
+				xmlFile << "\n<" + x.type + "> " + x.token + " </" + x.type + ">"; 
+			};
+		}
+
+		string getContents() {
+			string contents;
+
+			while (tokenizer.hasMoreTokens() && !isCurrentToken("}")) {
+				if (isCurrentToken("field")) {
+					contents += compileClassVarDec();
+				}
+
+				else if (isCurrentToken({ "method", "function", "constructor" })) {
+					contents += compileSubroutine();
+				}
+
+				else if (isCurrentToken("var")) {
+					contents += compileVarDec();
+				}
+
+				else if (isCurrentToken({ "if", "do", "let", "while", "return" })) {
+					contents += compileStatements();
+				}
+
+				else {
+					throw ("An error occurred during getContents(). CurrentToken cannot be parsed in this routine");
+				}
+			}
+
+			return contents;
+		}
+
+		bool isCurrentToken(unordered_set<string> stringsToCompare) {
+			return stringsToCompare.find(tokenizer.currentToken()) != stringsToCompare.end();
+		}
+
+		bool isCurrentToken(string stringToCompare) {
+			return tokenizer.currentToken() == stringToCompare;
+		}
+
+		string wrapInTags (string tag, string innerText) {
+			string possibleLineBreak = (innerText.size() > 0 && innerText[0] == '<') ? "\n" : "";
+
+			return "<" + tag + ">" + possibleLineBreak + innerText + "</" + tag + ">\n";
+		}
+
+		string wrapAndAdvanceCurrentToken(string &contents) {
+			contents += wrapInTags(tokenizer.currentType(), tokenizer.currentToken());
+			tokenizer.advance();
+			
+			return contents;
+		}
+
 		string compileClassVarDec() {
 			return wrapInTags("classVarDec", getContentsUntilSymbol(";"));
 		}
 
 		string compileSubroutine(){
 			return wrapInTags(
-				"subroutine", 
+				"subroutineDec", 
 				getContentsUntilSymbol("(")
-					+ compileParameterList() 
-					+ getContentsUntilSymbol("{") 
-					+ wrapInTags("subroutineBody", getContentsRecursively(true))
+					.append(compileParameterList())
+					.append(getContentsUntilSymbol("{"))
+					.append(wrapInTags("subroutineBody", getContents()))
 			);
 		}
 
@@ -300,6 +322,7 @@ class CompilationEngine {
 
 		string compileStatements() {
 			string contents; 
+			int failsafe = 0;
 			unordered_set<string> conditions = { "if", "do", "let", "while", "return" };
 
 			if (isCurrentToken("}")) {
@@ -311,6 +334,12 @@ class CompilationEngine {
 					
 				while (isCurrentToken(conditions)) {
 					contents += compileStatement();
+
+					failsafe++;
+					
+					if (failsafe > 1000) {
+						throw ("An overflow occured during the compileStatements routine.");
+					}
 				}
 			}
 
@@ -319,31 +348,36 @@ class CompilationEngine {
 
 		string compileStatement(){
 			string contents;
+			string activeStatement = tokenizer.currentToken();
 
 			if (isCurrentToken(unordered_set<string>({ "if", "while" }))) {
 				contents = getContentsUntilSymbol("(")
-					+ compileExpression()
-					+ getContentsUntilSymbol("{")
-					+ compileStatements();
+					.append(compileExpression({ ")" }))
+					.append(getContentsUntilSymbol("{"))
+					.append(compileStatements());
 			}
 
 			else if (isCurrentToken("let")) {
-				contents = gcusAndAccountForExpressions("=")
-					+ compileExpression();
+				contents = gcusAndAccountForExpressions({ "=" })
+					.append(compileExpression());
 			}
 
 			else if (isCurrentToken("do")) {
 				contents = getContentsUntilSymbol("(")
-					+ compileExpressionList();
+					.append(compileExpressionList());
 			}
 
-			if (isCurrentToken("return")) {
+			else if (isCurrentToken("return")) {
 				wrapAndAdvanceCurrentToken(contents);
 				contents += compileExpression();
 			}
 
+			else {
+				throw ("compileStatement was called but no statement was parsed");
+			}
 
-			return wrapInTags(tokenizer.currentToken() + "Statement", contents);
+
+			return wrapInTags(activeStatement + "Statement", contents);
 		}
 
 		
@@ -354,7 +388,7 @@ class CompilationEngine {
 				wrapAndAdvanceCurrentToken(contents);
 			} else {
 				while (!isCurrentToken(stoppingTokens)) {
-					contents += compileTerm();
+					contents += compileTerm(stoppingTokens);
 				}
 
 				contents = wrapInTags("expression", contents);
@@ -367,10 +401,10 @@ class CompilationEngine {
 			return contents;
 		}
 
-		string gcusAndAccountForExpressions(string stoppingToken) {
+		string gcusAndAccountForExpressions(unordered_set<string> stoppingTokens) {
 			string contents;
 
-			while (!isCurrentToken(stoppingToken)) {
+			while (!isCurrentToken(stoppingTokens)) {
 				if (isCurrentToken("(")) {
 					contents += compileExpression({ ")" });
 				} 
@@ -378,6 +412,11 @@ class CompilationEngine {
 				else if (isCurrentToken("[")) {
 					contents += compileExpression({ "]" });
 				} 
+
+				else if (isCurrentToken(".")) {
+					contents += getContentsUntilSymbol("(") 
+						.append(compileExpressionList());
+				}
 				
 				else {
 					wrapAndAdvanceCurrentToken(contents);
@@ -387,34 +426,8 @@ class CompilationEngine {
 			return contents;
 		}
 
-		string compileTerm() {
-			string contents;
-			string prevToken = tokenizer.currentToken();
-			string prevType = tokenizer.currentType();
-
-			tokenizer.advance();
-
-			if (prevType == "IDENTIFIER") {
-				if (isCurrentToken(".")) {
-					contents = getContentsUntilSymbol("(") + compileExpressionList();
-				} 
-
-				else if (isCurrentToken("[")) {
-					contents = compileExpression({ "]" });
-				}
-
-				else if (isCurrentToken("(")) {
-					contents = compileExpression({ ")" });
-				}
-
-				else {
-					wrapAndAdvanceCurrentToken(contents);
-				}
-			} else {
-				wrapAndAdvanceCurrentToken(contents);
-			}
-
-			return wrapInTags("term", contents);
+		string compileTerm(unordered_set<string> stoppingTokens) {
+			return wrapInTags("term", gcusAndAccountForExpressions(stoppingTokens));
 		}
 
 		string compileExpressionList() {
@@ -453,7 +466,7 @@ class JackAnalyzer {
 		}
 
 		void analyze(string name) {
-			ofstream xmlFile(name + "T.xml");
+			ofstream xmlFile(name + ".xml");
 			ifstream jackFile(name + ".jack");
 
 			JackTokenizer tokenizer(jackFile);
