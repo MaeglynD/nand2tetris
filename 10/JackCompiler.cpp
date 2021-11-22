@@ -218,7 +218,11 @@ class CompilationEngine {
 		}
 
 		void compileClass(bool printXML) {
-			string contents = wrapInTags("class", getContentsUntilSymbol("{").append(getContents()));
+			string contents = wrapInTags("class", 
+				getContentsUntilSymbol("{")
+					.append(getContents())
+					.append(getContentsUntilSymbol("}"))
+			);
 
 			xmlFile << contents;
 			xmlFile.close();
@@ -350,13 +354,7 @@ class CompilationEngine {
 			}
 				
 			while (isCurrentToken(conditions)) {
-				bool shouldIncludeEndBlock = isCurrentToken(unordered_set<string>({ "if", "while" }));
-
 				contents += compileStatement();
-
-				if (shouldIncludeEndBlock) {
-					wrapAndAdvanceCurrentToken(contents);
-				}
 
 				failsafe++;
 				
@@ -379,10 +377,19 @@ class CompilationEngine {
 					.append(compileExpression({ ")" }))
 					.append(getContentsUntilSymbol("{"))
 					.append(compileStatements());
+
+				wrapAndAdvanceCurrentToken(contents);
 			}
 
 			else if (isCurrentToken("let")) {
-				contents = gcusAndAccountForExpressions({ "=" }, true)
+				wrapAndAdvanceCurrentToken(contents);
+				wrapAndAdvanceCurrentToken(contents);
+
+				if (isCurrentToken("[")) {
+					contents += compileExpression({ "]" });
+				}
+
+				contents += getContentsUntilSymbol("=")
 					.append(compileExpression());
 			}
 
@@ -411,7 +418,24 @@ class CompilationEngine {
 			if (isCurrentToken(";")) {
 				wrapAndAdvanceCurrentToken(contents);
 			} else {
-				contents = compileTerm(stoppingTokens);
+
+				while (!isCurrentToken(stoppingTokens)) {
+					string type = tokenizer.currentType();
+					bool isTermable = (
+						type == "identifier" || 
+						type == "integerConstant" || 
+						type == "stringConstant" ||
+						type == "keyword" ||
+						isCurrentToken({ "(", "~", "-" })
+					);
+					
+					if (isTermable) {
+						contents += compileTerm();
+					} else {
+						wrapAndAdvanceCurrentToken(contents);
+					}
+				}
+
 				contents = wrapInTags("expression", contents);
 
 				if (shouldIncludeStopper) {
@@ -422,37 +446,36 @@ class CompilationEngine {
 			return contents;
 		}
 
-		string gcusAndAccountForExpressions(unordered_set<string> stoppingTokens, bool shouldIncludeStopper = false) {
+		string compileTerm() {
 			string contents;
+			string prevType = tokenizer.currentType();
+			string prevToken = tokenizer.currentToken();
 
-			while (!isCurrentToken(stoppingTokens)) {
-				string prevToken = tokenizer.currentToken();
+			wrapAndAdvanceCurrentToken(contents);
 
-				wrapAndAdvanceCurrentToken(contents);
+			if (prevToken == "(") {
+				contents += compileExpression({ ")" });
+			}
 
-				if (prevToken == "(") {
+			else if (prevType == "identifier") {
+				if (isCurrentToken("(")) {
 					contents += compileExpression({ ")" });
-				} 
-				
-				else if (prevToken == "[") {
-					contents += compileExpression({ "]" });
-				} 
+				}
 
-				else if (prevToken == ".") {
-					contents += getContentsUntilSymbol("(") 
-						.append(compileExpressionList());
+				else if (isCurrentToken("[")) {
+					contents += compileExpression({ "]" });
+				}
+
+				else if (isCurrentToken(".")) {
+					contents += getContentsUntilSymbol("(").append(compileExpressionList());
 				}
 			}
 
-			if (shouldIncludeStopper) {
-				wrapAndAdvanceCurrentToken(contents);
+			else if (prevType == "symbol") {
+				contents += compileTerm();
 			}
 
-			return contents;
-		}
-
-		string compileTerm(unordered_set<string> stoppingTokens) {
-			return wrapInTags("term", gcusAndAccountForExpressions(stoppingTokens));
+			return wrapInTags("term", contents);
 		}
 
 		string compileExpressionList() {

@@ -191,3 +191,65 @@ compileClass() {
 		 getContentsRecursively(true);
 	</class>
 }
+
+compileExpression:
+	while (!isCurrentToken(stoppingToken)) {
+		if (identifier || int_const || string_const || keyword || '(') {
+			compileTerm()
+		} else {
+			wrapAndAdvance
+		}
+	}
+
+
+compileTerm:
+	string contents;
+	prevToken = ...;
+
+	wrapAndAdvance(contents);
+
+	if (prevToken is identifier) {
+		if (currentToken is '(') {
+			contents += compileExpression({ ")" });
+		}
+		
+		else if (currentToken is '[') {
+			contents += compileExpression({ "]" });
+		}
+
+		else if (currentToken is '.') {
+			contents += getContentsUntilSymbol("(")
+				.append(compileExpressionList);
+		}
+	} 
+
+	else if (prevToken is '-', '~') {
+		wrapAndAdvanceCurrentToken(contents);
+		contents += compileTerm()
+	}
+
+	return wrapInTags("term", contents);
+
+
+
+
+let test = a[3] + test(3);
+				 
+= a[3] + a.test(3);
+= 3 + test.someFunction();
+<expression>
+	<term>
+		<identifier> a </identifier>
+		<symbol> [ </symbol>
+			<term>
+				<int_const> 3 </int_const>
+			</term>
+	</term>
+	<symbol> + </symbol>
+	<term>
+		<identifier> test </identifier>
+
+	</term>
+</expression>
+<symbol> ; </symbol>
+
