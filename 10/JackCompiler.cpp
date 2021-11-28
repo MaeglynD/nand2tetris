@@ -12,28 +12,28 @@ using namespace std;
 namespace fs = std::experimental::filesystem;
 
 string symbols = "{}()[].,;+-*/&|<>=~";
-unordered_map<string, string> keywords = {
-	{ "class", "" },
-	{ "constructor", "" },
-	{ "function", "" },
-	{ "method", "" },
-	{ "field", "" },
-	{ "static", "" },
-	{ "var", "" },
-	{ "int", "" },
-	{ "char", "" },
-	{ "boolean", "" },
-	{ "void", "" },
-	{ "true", "" },
-	{ "false", "" },
-	{ "null", "" },
-	{ "this", "" },
-	{ "let", "" },
-	{ "do", "" },
-	{ "if", "" },
-	{ "else", "" },
-	{ "while", "" },
-	{ "return", "" },
+unordered_set<string> keywords = {
+	"class",
+	"constructor",
+	"function",
+	"method",
+	"field",
+	"static",
+	"var",
+	"int",
+	"char",
+	"boolean",
+	"void",
+	"true",
+	"false",
+	"null",
+	"this",
+	"let",
+	"do",
+	"if",
+	"else",
+	"while",
+	"return"
 };
 
 struct Token {
@@ -122,8 +122,7 @@ class JackTokenizer {
 							bool hasFoundKeyword = false;
 							
 							// Keywords
-							for(auto &keyword : keywords) {
-								string kwa = keyword.first;
+							for(auto &kwa : keywords) {
 								int len = kwa.length();
 
 								if (len <= line.length() + 1) {
